@@ -6,6 +6,8 @@ This project adds missing functionality to DLLStruct's:
 * Support for union's
 * Allow nested structs
 
+See the example for usage.
+
 ## drawbacks
 Speed.
 
