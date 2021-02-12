@@ -43,14 +43,14 @@ $tagFOCUS_EVENT_RECORD = _
 $txINPUT_RECORD = DllStructExCreate($tagINPUT_RECORD)
 If @error <> 0 Then
     ConsoleWrite(StringFormat("ERROR: %d : %d\n", @error, @extended))
-    $t = 0
+    $txINPUT_RECORD = 0
     Exit 1
 EndIf
 $tINPUT_RECORD = DllStructExGetStruct($txINPUT_RECORD) ;Get the normal DllStruct from the DllStructEx
 DllStructSetData($tINPUT_RECORD, "EventType", 123)
 
+$tKEY_EVENT_RECORD = DllStructExGetStruct($txINPUT_RECORD.Event.KeyEvent)
+DllStructSetData($tKEY_EVENT_RECORD, "bKeyDown", 1)
+
 ConsoleWrite($txINPUT_RECORD.Event.KeyEvent.bKeyDown&@CRLF)
 $txINPUT_RECORD = 0
-
-#include <WinAPIMisc.au3>
-_WinAPI_GetMousePos
