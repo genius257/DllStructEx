@@ -40,14 +40,17 @@ $tagMENU_EVENT_RECORD = _
 $tagFOCUS_EVENT_RECORD = _
 "BOOL bSetFocus;"
 
-#include <Array.au3>
-
-$t = DllStructExCreate($tagINPUT_RECORD)
+$txINPUT_RECORD = DllStructExCreate($tagINPUT_RECORD)
 If @error <> 0 Then
     ConsoleWrite(StringFormat("ERROR: %d : %d\n", @error, @extended))
     $t = 0
     Exit 1
 EndIf
-$tINPUT_RECORD = DllStructExGetStruct($t)
-$tINPUT_RECORD.EventType = 123
-ConsoleWrite($t.EventType&@CRLF)
+$tINPUT_RECORD = DllStructExGetStruct($txINPUT_RECORD) ;Get the normal DllStruct from the DllStructEx
+DllStructSetData($tINPUT_RECORD, "EventType", 123)
+
+ConsoleWrite($txINPUT_RECORD.Event.KeyEvent.bKeyDown&@CRLF)
+$txINPUT_RECORD = 0
+
+#include <WinAPIMisc.au3>
+_WinAPI_GetMousePos
