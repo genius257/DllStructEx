@@ -189,7 +189,6 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1))
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    MsgBox(0, _WinAPI_GetString($tElement.szName), _WinAPI_GetString($tElement.szTranslatedStruct))
                     $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
