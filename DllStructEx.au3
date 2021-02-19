@@ -413,7 +413,7 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
     Local Static $anonymousElementCount
     Local $sPrepend = $aMatches[1]
     Local $sType = $aMatches[2]
-    Local $sName = $aMatches[3]
+    Local $sName = UBound($aMatches) > 3 Then $aMatches[3] : ""
 
     If "" = $sName Then
         $sName = StringFormat("_anonymousElement%d", $anonymousElementCount)
