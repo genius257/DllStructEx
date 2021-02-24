@@ -95,7 +95,6 @@ Func __DllStructEx_Release($pSelf)
     Local $tStruct = DllStructCreate("int Ref", $pSelf-8)
     $tStruct.Ref -= 1
     If $tStruct.Ref = 0 Then; initiate garbage collection
-
         Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
         ;releases all properties
         _WinAPI_FreeMemory(DllStructGetData($tObject, "szStruct"))
@@ -413,7 +412,7 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
     Local Static $anonymousElementCount
     Local $sPrepend = $aMatches[1]
     Local $sType = $aMatches[2]
-    Local $sName = UBound($aMatches) > 3 Then $aMatches[3] : ""
+    Local $sName = UBound($aMatches) > 3 ? $aMatches[3] : ""
 
     If "" = $sName Then
         $sName = StringFormat("_anonymousElement%d", $anonymousElementCount)
