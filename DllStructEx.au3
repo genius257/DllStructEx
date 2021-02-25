@@ -51,6 +51,12 @@ Global Const $g__DllStructEx_tagElements = "INT Index;INT Size;BYTE Elements[%d]
 
 Global Enum $g__DllStructEx_eElementType_NONE, $g__DllStructEx_eElementType_UNION, $g__DllStructEx_eElementType_Struct, $g__DllStructEx_eElementType_Element
 
+#cs
+# Creates a C/C++ style structure.
+# @param string $sStruct A string representing the structure to create.
+# @param ptr    $pData   If supplied the struct will not allocate memory but use the pointer supplied.
+# @return DllStructEx
+#ce
 Func DllStructExCreate($sStruct, $pData = 0)
     Local $aResult = __DllStructEx_ParseStruct($sStruct)
     If @error <> 0 Then Return SetError(1, @error, "")
@@ -75,6 +81,10 @@ Func DllStructExCreate($sStruct, $pData = 0)
     Return $oDllStructEx
 EndFunc
 
+#cs
+# Queries a COM object for a pointer to one of its interface; identifying the interface by a reference to its interface identifier (IID). If the COM object implements the interface, then it returns a pointer to that interface after calling __DllStructEx_AddRef on it.
+# @internal
+#ce
 Func __DllStructEx_QueryInterface($pSelf, $pRIID, $pObj)
     If $pObj=0 Then Return $E_POINTER
     Local $sGUID=DllCall("ole32.dll", "int", "StringFromGUID2", "PTR", $pRIID, "wstr", "", "int", 40)[2]
@@ -85,12 +95,20 @@ Func __DllStructEx_QueryInterface($pSelf, $pRIID, $pObj)
     Return $S_OK
 EndFunc
 
+#cs
+# Increments the reference count for an interface pointer to a COM object. You should call this method whenever you make a copy of an interface pointer.
+# @internal
+#ce
 Func __DllStructEx_AddRef($pSelf)
     Local $tStruct = DllStructCreate("int Ref", $pSelf-8)
     $tStruct.Ref += 1
     Return $tStruct.Ref
 EndFunc
 
+#cs
+# Decrements the reference count for an interface on a COM object.
+# @internal
+#ce
 Func __DllStructEx_Release($pSelf)
     Local $tStruct = DllStructCreate("int Ref", $pSelf-8)
     $tStruct.Ref -= 1
@@ -108,6 +126,10 @@ Func __DllStructEx_Release($pSelf)
     Return $tStruct.Ref
 EndFunc
 
+#cs
+# Maps a single member and an optional set of argument names to a corresponding set of integer DISPIDs, which can be used on subsequent calls to __DllStructEx_Invoke.
+# @internal
+#ce
 Func __DllStructEx_GetIDsOfNames($pSelf, $riid, $rgszNames, $cNames, $lcid, $rgDispId)
     Local $tDispId = DllStructCreate("long DispId;", $rgDispId)
     Local $pName = DllStructGetData(DllStructCreate("ptr", $rgszNames), 1)
@@ -132,17 +154,29 @@ Func __DllStructEx_GetIDsOfNames($pSelf, $riid, $rgszNames, $cNames, $lcid, $rgD
     Return $S_OK
 EndFunc
 
+#cs
+# Retrieves the type information for an object, which can then be used to get the type information for an interface.
+# @internal
+#ce
 Func __DllStructEx_GetTypeInfo($pSelf, $iTInfo, $lcid, $ppTInfo)
     If $iTInfo<>0 Then Return $DISP_E_BADINDEX
     If $ppTInfo=0 Then Return $E_INVALIDARG
     Return $S_OK
 EndFunc
 
+#cs
+# Retrieves the number of type information interfaces that an object provides (either 0 or 1).
+# @internal
+#ce
 Func __DllStructEx_GetTypeInfoCount($pSelf, $pctinfo)
     DllStructSetData(DllStructCreate("UINT",$pctinfo), 1, 0)
     Return $S_OK
 EndFunc
 
+#cs
+# Provides access to properties and methods exposed by an object.
+# @internal
+#ce
 Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispParams, $pVarResult, $pExcepInfo, $puArgErr)
     If $dispIdMember = -1 Then Return $DISP_E_MEMBERNOTFOUND
 
@@ -211,6 +245,16 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     Return $DISP_E_MEMBERNOTFOUND
 EndFunc
 
+#cs
+# Create DllStructEx object.
+# @internal
+# @param string $sStruct
+# @param string $sTranslatedStruct
+# @param DllStruct $tElements
+# @param ptr $pData
+# @param ptr|null $pElements if not null, specifies the ptr for the elements to use. Fallback is the Elements index from $tElements
+# @return DllStructEx
+#ce
 Func __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, $pData, $pElements = Null)
     Local $tObject = DllStructCreate($g__DllStructEx_tagObject)
 
@@ -257,6 +301,13 @@ Func __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, $pData, $pEl
     Return ObjCreateInterface(DllStructGetPtr($tObject, "Object"), $IID_IDispatch, Default, True) ; pointer that's wrapped into object
 EndFunc
 
+#cs
+# Convert AutoIt data to variant.
+# @internal
+# @param mixed          $vData
+# @param DllStruct|null $tVariant variant
+# @return DllStruct variant
+#ce
 Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
     If Not IsDllStruct($tVARIANT) Then $tVARIANT = DllStructCreate($tagVARIANT)
     #cs
@@ -311,6 +362,12 @@ Func __DllStructEx_CalcStructSize()
     ;FIXME
 EndFunc
 
+#cs
+# Parse struct.
+# @internal
+# @param string $sStruct
+# @return [string, DllStruct]
+#ce
 Func __DllStructEx_ParseStruct($sStruct)
     Local $aUnions = StringRegExp($sStruct, "(?i)(^|;)\s*union\s*{[^}]+}\s*(?:\w+)?", 3)
     If @error = 2 Then Return SetError(3, @error, "")
@@ -348,6 +405,14 @@ Func __DllStructEx_ParseStruct($sStruct)
     Return $sStruct
 EndFunc
 
+#cs
+# Parse DllStruct type.
+# The @extended value will be equal to the size of type in bytes.
+# @internal
+# @param string         $sType
+# @param DllStruct|null $tElements
+# @return string
+#ce
 Func __DllStructEx_ParseStructType($sType, $tElements = Null)
     Local $tElement = IsDllStruct($tElements) ? DllStructCreate($g__DllStructEx_tagElement, DllStructGetPtr($tElements, "Elements") + $g__DllStructEx_iElement * $tElements.Index) : DllStructCreate($g__DllStructEx_tagElement)
     ; The size of type in bytes
@@ -408,6 +473,13 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
     Return SetExtended($iSize, $sTranslatedType)
 EndFunc
 
+#cs
+# Callback for parsing a union string.
+# @internal
+# @param string[]  $aUnion
+# @param DllStruct $tUnions
+# @return string
+#ce
 Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
     Local Static $anonymousElementCount
     Local $sPrepend = $aMatches[1]
@@ -442,6 +514,13 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
     Return StringFormat("%s%s %s%s", $sPrepend, $aType[0], $sName, UBound($aType, 1) > 1 ? $aType[1] : "")
 EndFunc
 
+#cs
+# Callback for parsing a union string.
+# @internal
+# @param string[]  $aUnion
+# @param DllStruct $tUnions
+# @return string
+#ce
 Func __DllStructEx_ParseUnion($aUnion, $tUnions)
     Local Static $anonymousUnionCount = 0
     Local $sPrepend = $aUnion[1]
@@ -529,6 +608,17 @@ EndFunc
 
 ;FIXME: either rename to fit namespace, or use a include.
 Func StringRegExpReplaceCallbackEx($sString, $sPattern, $sFunc, $iLimit = 0, $vExtra = Null)
+#cs
+# Perform a regular expression search and replace using a callback.
+# @author Mat
+# @modifier genius257
+# @param string          $sString
+# @param string          $sPattern
+# @param function|string $sFunc
+# @param int             $iLimit
+# @param mixed           $vExtra
+# @return string
+#ce
     Local $iOffset = 1, $iDone = 0, $iMatchOffset
 
     While True
@@ -549,6 +639,13 @@ Func StringRegExpReplaceCallbackEx($sString, $sPattern, $sFunc, $iLimit = 0, $vE
     Return SetExtended($iDone, $sString)
 EndFunc   ;==>StringRegExpReplaceCallback
 
+#cs
+# Allocate DllStruct memory
+# @internal
+# @param string         $sStruct
+# @param DllStruct|null $tStruct
+# @return DllStruct
+#ce
 Func __DllStructEx_DllStructAlloc($sStruct, $tStruct = Null)
     If Not IsDllStruct($tStruct) Then $tStruct = DllStructCreate($sStruct)
     If @error <> 0 Then Return SetError(@error, @extended, 0)
@@ -559,6 +656,12 @@ Func __DllStructEx_DllStructAlloc($sStruct, $tStruct = Null)
     Return DllStructCreate($sStruct, $pStruct)
 EndFunc
 
+#cs
+# Free DllStruct memory
+# @internal
+# @param ptr $pStruct
+# @return bool
+#ce
 Func __DllStructEx_DllStructFree($pStruct)
     If IsDllStruct($pStruct) Then $pStruct = DllStructGetPtr($pStruct)
     Local $aRet = DllCall("Kernel32.dll", "ptr", "GlobalHandle", "ptr", $pStruct)
@@ -568,6 +671,13 @@ Func __DllStructEx_DllStructFree($pStruct)
     Return True
 EndFunc
 
+#cs
+# Conpare strings
+# @internal
+# @param ptr $szString1
+# @param ptr $szString2
+# @return int
+#ce
 Func __DllStructEx_CompareSzStrings($szString1, $szString2)
     ; FIXME: add support for comparing strings on win xp
     ;CompareStringOrdinal
@@ -591,6 +701,12 @@ Func __DllStructEx_szStringsEqual($szString1, $szString2)
     Return $iResult = $CSTR_EQUAL
 EndFunc
 
+#cs
+# Copies a specified string to the newly allocated memory block and returns its pointer
+# @internal
+# @param string $sString
+# @return ptr
+#ce
 Func __DllStructEx_CreateString($sString)
     Local $pString = _WinAPI_CreateString($sString, 0, -1, True, False)
     If @error <> 0 Then Return SetError(@error, @extended, 0)
