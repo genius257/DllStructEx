@@ -506,6 +506,17 @@ Func DllStructExGetStructString($oDllStructEx)
     Return _WinAPI_GetString(DllStructGetData($tObject, "szStruct"), True)
 EndFunc
 
+#cs
+# Get the AutoIt dllstruct compatible string transpiled from the string used when the DllStruct was created.
+# @param DllStructEx $oDllStructEx A DllStructEx Object
+# @return string
+#ce
+Func DllStructExGetTranspiledStructString($oDllStructEx)
+    Local $pDllStructEx = Ptr($oDllStructEx)
+    Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pDllStructEx - 8)
+    Return _WinAPI_GetString(DllStructGetData($tObject, "szTranslatedStruct"), True)
+EndFunc
+
 Func DllStructExGetSize($oDllStructEx)
     $tStruct = DllStructExGetStruct($oDllStructEx)
     Return DllStructGetSize($tStruct)
