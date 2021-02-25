@@ -372,12 +372,12 @@ Func __DllStructEx_ParseStruct($sStruct)
     Local $aUnions = StringRegExp($sStruct, "(?i)(^|;)\s*union\s*{[^}]+}\s*(?:\w+)?", 3)
     If @error = 2 Then Return SetError(3, @error, "")
     Local $tUnions = DllStructCreate(StringFormat($g__DllStructEx_tagElements, $g__DllStructEx_iElement * UBound($aUnions, 1)))
-    $sStruct = StringRegExpReplaceCallbackEx($sStruct, "(?i)(^|;)\s*union\s*{([^}]+)}\s*(\w+)?", __DllStructEx_ParseUnion, 0, $tUnions)
+    $sStruct = __DllStructEx_StringRegExpReplaceCallbackEx($sStruct, "(?i)(^|;)\s*union\s*{([^}]+)}\s*(\w+)?", __DllStructEx_ParseUnion, 0, $tUnions)
     If @error <> 0 Then Return SetError(1, @error, "")
     Local $aElements = StringRegExp($sStruct, "(^|;)\s*\w+(?:\s+\w+)?", 3)
     If @error <> 0 Then Return SetError(4, @error, "")
     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, $g__DllStructEx_iElement * UBound($aElements, 1)))
-    $sStruct = StringRegExpReplaceCallbackEx($sStruct, "(^|;)\s*(\w+)(?:\s+(\w+))?", __DllStructEx_ParseStructTypeCallback, 0, $tElements)
+    $sStruct = __DllStructEx_StringRegExpReplaceCallbackEx($sStruct, "(^|;)\s*(\w+)(?:\s+(\w+))?", __DllStructEx_ParseStructTypeCallback, 0, $tElements)
     If @error <> 0 Then Return SetError(2, @error, "")
 
     Local $tUnion, $tElement
@@ -544,14 +544,14 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
     Local $_tUnions = DllStructCreate(StringFormat($g__DllStructEx_tagElements, $g__DllStructEx_iElement * UBound($aUnions, 1)))
     ;FIXME: use $_tUnions
 
-    Local $sStruct = StringRegExpReplaceCallbackEx($sUnionStruct, "(?i)(^|;)\s*union\s*{([^}]+)}\s*([^\s;]+)?", __DllStructEx_ParseUnion)
+    Local $sStruct = __DllStructEx_StringRegExpReplaceCallbackEx($sUnionStruct, "(?i)(^|;)\s*union\s*{([^}]+)}\s*([^\s;]+)?", __DllStructEx_ParseUnion);FIXME: we don't send any struct as $vExtra
     If @error <> 0 Then Return SetError(1, @error, "")
 
     Local $aElements = StringRegExp($sStruct, "(^|;)\s*\w+(?:\s+\w+)?", 3)
     If @error <> 0 Then Return SetError(4, @error, "")
     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, $g__DllStructEx_iElement * UBound($aElements, 1)))
 
-    $sStruct = StringRegExpReplaceCallbackEx($sStruct, "(^|;)\s*(\w+)(?:\s+(\w+))?", __DllStructEx_ParseStructTypeCallback, 0, $tElements)
+    $sStruct = __DllStructEx_StringRegExpReplaceCallbackEx($sStruct, "(^|;)\s*(\w+)(?:\s+(\w+))?", __DllStructEx_ParseStructTypeCallback, 0, $tElements)
     If @error <> 0 Then Return SetError(2, @error, "")
     $tUnion.szTranslatedStruct = __DllStructEx_CreateString($sStruct)
     $tUnion.cElements = $tElements.Index
@@ -606,8 +606,6 @@ Func DllStructExGetSize($oDllStructEx)
     Return DllStructGetSize($tStruct)
 EndFunc
 
-;FIXME: either rename to fit namespace, or use a include.
-Func StringRegExpReplaceCallbackEx($sString, $sPattern, $sFunc, $iLimit = 0, $vExtra = Null)
 #cs
 # Perform a regular expression search and replace using a callback.
 # @author Mat
@@ -619,6 +617,7 @@ Func StringRegExpReplaceCallbackEx($sString, $sPattern, $sFunc, $iLimit = 0, $vE
 # @param mixed           $vExtra
 # @return string
 #ce
+Func __DllStructEx_StringRegExpReplaceCallbackEx($sString, $sPattern, $sFunc, $iLimit = 0, $vExtra = Null)
     Local $iOffset = 1, $iDone = 0, $iMatchOffset
 
     While True
