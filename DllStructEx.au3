@@ -517,6 +517,11 @@ Func DllStructExGetTranspiledStructString($oDllStructEx)
     Return _WinAPI_GetString(DllStructGetData($tObject, "szTranslatedStruct"), True)
 EndFunc
 
+#cs
+# Get the stuct size in bytes.
+# @param DllStructEx $oDllStructEx A DllStructEx Object
+# @return int
+#ce
 Func DllStructExGetSize($oDllStructEx)
     $tStruct = DllStructExGetStruct($oDllStructEx)
     Return DllStructGetSize($tStruct)
