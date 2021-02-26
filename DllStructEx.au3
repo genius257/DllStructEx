@@ -33,7 +33,7 @@ If Not IsDeclared("DISP_E_PARAMNOTOPTIONAL") Then Global Const $DISP_E_PARAMNOTO
 If Not IsDeclared("DISP_E_BADCALLEE") Then Global Const $DISP_E_BADCALLEE = 0x80020010
 If Not IsDeclared("DISP_E_NOTACOLLECTION") Then Global Const $DISP_E_NOTACOLLECTION = 0x80020011
 
-Global Const $tagVARIANT = "ushort vt;ushort r1;ushort r2;ushort r3;PTR data;PTR data2";FIXME: rename varaible
+Global Const $g__DllStructEx_tagVARIANT = "ushort vt;ushort r1;ushort r2;ushort r3;PTR data;PTR data2"
 
 If Not IsDeclared("VT_EMPTY") Then Global Enum $VT_EMPTY,$VT_NULL,$VT_I2,$VT_I4,$VT_R4,$VT_R8,$VT_CY,$VT_DATE,$VT_BSTR,$VT_DISPATCH, _
     $VT_ERROR,$VT_BOOL,$VT_VARIANT,$VT_UNKNOWN,$VT_DECIMAL,$VT_I1=16,$VT_UI1,$VT_UI2,$VT_UI4,$VT_I8, _
@@ -185,7 +185,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     ;FIXME: remove this
     $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
     If $tDISPPARAMS.cArgs<>1 Then Return $DISP_E_BADPARAMCOUNT
-    Local $tVARIANT=DllStructCreate($tagVARIANT, $tDISPPARAMS.rgvargs)
+    Local $tVARIANT=DllStructCreate($g__DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
     ConsoleWrite($tVARIANT.vt&@CRLF)
     Return $S_OK
     #ce
@@ -194,7 +194,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
         ;FIXME: look for first parameter, to see if index is requested
         ;VariantInit($pVariant) ;FIXME: it seems unclear if the return variant should go through VariantInit before usage?
         Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
-        Local $tVARIANT = DllStructCreate($tagVARIANT, $pVarResult)
+        Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
         $tVARIANT.vt = $VT_BSTR
         $tVARIANT.data = DllStructGetData($tObject, "szStruct")
         Return $S_OK
@@ -209,7 +209,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
         If $tObject.cElements >= $dispIdMember Then
             Local $tElement = DllStructCreate($g__DllStructEx_tagElement, $tObject.pElements + $g__DllStructEx_iElement * ($dispIdMember - 1))
             If @error <> 0 Then Return $DISP_E_EXCEPTION
-            Local $tVARIANT = DllStructCreate($tagVARIANT, $pVarResult)
+            Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
             If @error <> 0 Then Return $DISP_E_EXCEPTION
             Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
             If @error <> 0 Then Return $DISP_E_EXCEPTION
@@ -309,7 +309,7 @@ EndFunc
 # @return DllStruct variant
 #ce
 Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
-    If Not IsDllStruct($tVARIANT) Then $tVARIANT = DllStructCreate($tagVARIANT)
+    If Not IsDllStruct($tVARIANT) Then $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT)
     #cs
         $VT_I4 = 3 => int32
         $VT_I8 = 20 => int64
