@@ -269,8 +269,6 @@ Func __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, $pData, $pEl
 
     DllStructSetData($tObject, "pStruct", $pData)
 
-    ;FIXME: used from internal to create and return nested struct object ref, without parsing strings again.
-    ;FIXME: move defning and setting object methods into here. The other function uses this.
     Local Static $QueryInterface = DllCallbackRegister(__DllStructEx_QueryInterface, "LONG", "ptr;ptr;ptr")
     DllStructSetData($tObject, "Methods", DllCallbackGetPtr($QueryInterface), 1)
 
@@ -358,10 +356,6 @@ Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
     Return $tVARIANT
 EndFunc
 
-Func __DllStructEx_CalcStructSize()
-    ;FIXME
-EndFunc
-
 #cs
 # Parse struct.
 # @internal
@@ -447,8 +441,6 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
                 If @error <> 0 Then Return SetError(2, 0, "")
                 $iSize = DllStructGetSize($tStruct)
                 $sTranslatedType = StringFormat("BYTE[%d]", $iSize)
-                ;Local $tmp = [$sType, $aResult[1]];FIXME: remmove so only string is returned
-                ;$sType = $tmp
                 $tElement.cElements = $_tElements.Index
                 ;If $tElement.cElements > 0 Then ConsoleWrite("> "&_WinAPI_GetString(DllStructCreate($g__DllStructEx_tagElement, DllStructGetPtr($_tElements, "Elements")).szName)&@CRLF)
                 $tElement.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sTranslatedType, DllStructCreate($sTranslatedType, DllStructGetPtr($_tElements, "Elements"))))
@@ -508,8 +500,6 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
         $tElements.Size = $tElements.Size < $iSize ? $iSize : $tElements.Size
     EndIf
 
-    ;FIXME: generate a name if none exists
-    ;If "" = $sName Then Return StringFormat("%s%s", $sPrepend, $sType)
     Local $aType = StringRegExp($sType, "(\w+)(\[\d+\])?", 1)
     Return StringFormat("%s%s %s%s", $sPrepend, $aType[0], $sName, UBound($aType, 1) > 1 ? $aType[1] : "")
 EndFunc
