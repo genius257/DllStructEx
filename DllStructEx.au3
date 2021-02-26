@@ -71,6 +71,7 @@ Func DllStructExCreate($sStruct, $pData = 0)
         Local $pStruct = _MemGlobalLock($hStruct)
         _MemMoveMemory(DllStructGetPtr($tStruct), $pStruct, $iStruct)
         $pData = $pStruct
+        ;FIXME: should we copy memory, or should we just use the ptr, and have an object flag indicating if the $pData memory should be released on desctructor?
     EndIf
     DllStructCreate($sTranslatedStruct, $pData)
     If @error <> 0 Then Return SetError(2, 0, 0)
@@ -222,7 +223,12 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1))
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    #Region Clone Data
+                    ;FIXME: clone data so object release memory cleanup does not remove original ref
+                    Local $sStruct = _WinAPI_GetString($tElement.szStruct)
+                    Local $sTranslatedStruct = _WinAPI_GetString($tElement.szTranslatedStruct)
+                    #EndRegion Clone Data
+                    $vData = __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
@@ -230,7 +236,12 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1))
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    #Region Clone Data
+                    ;FIXME: clone data so object release memory cleanup does not remove original ref
+                    Local $sStruct = _WinAPI_GetString($tElement.szStruct)
+                    Local $sTranslatedStruct = _WinAPI_GetString($tElement.szTranslatedStruct)
+                    #EndRegion Clone Data
+                    $vData = __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
