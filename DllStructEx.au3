@@ -71,6 +71,8 @@ Func DllStructExCreate($sStruct, $pData = 0)
         Local $pStruct = _MemGlobalLock($hStruct)
         _MemMoveMemory(DllStructGetPtr($tStruct), $pStruct, $iStruct)
         $pData = $pStruct
+    Else
+        If Not @Compiled Then ConsoleWriteError("WARNING: memory pointer will be freed on when object destructor is triggered! This can lead to unexpected behavor."&@CRLF)
         ;FIXME: should we copy memory, or should we just use the ptr, and have an object flag indicating if the $pData memory should be released on desctructor?
     EndIf
     DllStructCreate($sTranslatedStruct, $pData)
