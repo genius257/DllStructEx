@@ -45,7 +45,10 @@ If Not IsDeclared("VT_EMPTY") Then Global Enum $VT_EMPTY,$VT_NULL,$VT_I2,$VT_I4,
 
 Global Const $g__DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;int cElements;ptr pElements;"
 Global Const $g__DllStructEx_tagElement = "int iType;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
-;The size of $g__DllStructEx_tagElement in bytes 
+#cs
+# The size of $g__DllStructEx_tagElement in bytes 
+# @var int
+#ce
 Global Const $g__DllStructEx_iElement = DllStructGetSize(DllStructCreate($g__DllStructEx_tagElement))
 Global Const $g__DllStructEx_tagElements = "INT Index;INT Size;BYTE Elements[%d];"
 
