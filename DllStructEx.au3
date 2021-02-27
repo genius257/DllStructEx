@@ -43,7 +43,7 @@ If Not IsDeclared("VT_EMPTY") Then Global Enum $VT_EMPTY,$VT_NULL,$VT_I2,$VT_I4,
     $VT_ARRAY=0x2000,$VT_BYREF=0x4000,$VT_RESERVED=0x8000,$VT_ILLEGAL=0xffff,$VT_ILLEGALMASKED=0xfff, _
     $VT_TYPEMASK=0xfff
 
-Global Const $g__DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;int cElements;ptr pElements;"
+Global Const $g__DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;int cElements;ptr pElements;ptr pParent;"
 Global Const $g__DllStructEx_tagElement = "int iType;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
 #cs
 # The size of $g__DllStructEx_tagElement in bytes 
@@ -120,11 +120,15 @@ Func __DllStructEx_Release($pSelf)
     $tStruct.Ref -= 1
     If $tStruct.Ref = 0 Then; initiate garbage collection
         Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
-        ;releases all properties
-        _WinAPI_FreeMemory(DllStructGetData($tObject, "szStruct"))
-        _WinAPI_FreeMemory(DllStructGetData($tObject, "szTranslatedStruct"))
-        ;FIXME: release pElements data Tree!
-
+        If $tObject.pParent = 0 Then
+            ;releases all properties
+            _WinAPI_FreeMemory(DllStructGetData($tObject, "szStruct"))
+            _WinAPI_FreeMemory(DllStructGetData($tObject, "szTranslatedStruct"))
+            ;FIXME: release pElements data Tree!
+        Else
+            __DllStructEx_Release($tObject.pParent)
+        EndIf
+        $tObject = Null
         __DllStructEx_DllStructFree($pSelf-8)
         If @error <> 0 And Not @Compiled Then ConsoleWriteError(StringFormat("ERROR: could not release object (%s)\n", $pSelf - 8))
         Return 0
@@ -228,12 +232,10 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1))
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    #Region Clone Data
-                    ;FIXME: clone data so object release memory cleanup does not remove original ref
-                    Local $sStruct = _WinAPI_GetString($tElement.szStruct)
-                    Local $sTranslatedStruct = _WinAPI_GetString($tElement.szTranslatedStruct)
-                    #EndRegion Clone Data
-                    $vData = __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
+                    $_tObject.pParent = $pSelf
+                    __DllStructEx_AddRef($pSelf)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
@@ -241,12 +243,10 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1))
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    #Region Clone Data
-                    ;FIXME: clone data so object release memory cleanup does not remove original ref
-                    Local $sStruct = _WinAPI_GetString($tElement.szStruct)
-                    Local $sTranslatedStruct = _WinAPI_GetString($tElement.szTranslatedStruct)
-                    #EndRegion Clone Data
-                    $vData = __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
+                    $_tObject.pParent = $pSelf
+                    __DllStructEx_AddRef($pSelf)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
