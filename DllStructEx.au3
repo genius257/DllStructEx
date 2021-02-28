@@ -349,7 +349,7 @@ Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
         Case 'String'
             $tVARIANT.vt = $VT_BSTR
             Local $tData = DllStructCreate("PTR data;", DllStructGetPtr($tVARIANT, 'data'))
-            $tData.data = $vData
+            $tData.data = __DllStructEx_CreateString($vData) ;TODO: should use SysAllocString instead.
         #cs
         Case 'Binary'
             $tVARIANT.vt = BitOR($VT_ARRAY, $VT_BOOL)
