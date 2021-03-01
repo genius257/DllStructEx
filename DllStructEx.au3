@@ -227,7 +227,6 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
 
             If $dispIdMember = -1 Then Return $DISP_E_MEMBERNOTFOUND
         Else
-            ;FIXME: look for first parameter, to see if index is requested
             ;VariantInit($pVariant) ;FIXME: it seems unclear if the return variant should go through VariantInit before usage?
             Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
             Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
