@@ -252,7 +252,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
             If @error <> 0 Then Return $DISP_E_EXCEPTION
             Switch $tElement.iType
                 Case $g__DllStructEx_eElementType_Element
-                    Local $vData = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName, True));FIXME: add support for getting struct data slice by index
+                    Local $vData = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName, True));TODO: add support for getting struct data slice by index
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                 Case $g__DllStructEx_eElementType_Struct
