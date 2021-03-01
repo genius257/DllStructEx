@@ -53,4 +53,6 @@ $tKEY_EVENT_RECORD = DllStructExGetStruct($txINPUT_RECORD.Event.KeyEvent)
 DllStructSetData($tKEY_EVENT_RECORD, "bKeyDown", 1)
 
 ConsoleWrite($txINPUT_RECORD.Event.KeyEvent.bKeyDown&@CRLF)
+$keyEvent = $txINPUT_RECORD.Event.KeyEvent
+ConsoleWrite($KeyEvent(1)&@CRLF);getting value of index 1: bKeyDown
 $txINPUT_RECORD = 0
