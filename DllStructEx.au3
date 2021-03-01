@@ -201,13 +201,41 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     #ce
 
     If $dispIdMember = 0 Then
-        ;FIXME: look for first parameter, to see if index is requested
-        ;VariantInit($pVariant) ;FIXME: it seems unclear if the return variant should go through VariantInit before usage?
-        Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
-        Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
-        $tVARIANT.vt = $VT_BSTR
-        $tVARIANT.data = DllStructGetData($tObject, "szStruct")
-        Return $S_OK
+        $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+        If $tDISPPARAMS.cArgs>1 Then Return $DISP_E_BADPARAMCOUNT
+        If $tDISPPARAMS.cArgs = 1 Then
+            Local $tVARIANT=DllStructCreate($g__DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
+            If $tVARIANT.vt = $VT_BSTR Then
+                Local $name = StringLower(_WinAPI_GetString($tVARIANT.data))
+                Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf - 8)
+                Local $i
+                Local $tElement
+                For $i = 0 To $tObject.cElements - 1 Step +1
+                    $tElement = DllStructCreate($g__DllStructEx_tagElement, $tObject.pElements + $g__DllStructEx_iElement * $i)
+                    If $name = StringLower(_WinAPI_GetString($tElement.szName)) Then
+                        $dispIdMember = $i + 1
+                        ExitLoop
+                    EndIf
+                Next
+                If $dispIdMember = 0 Then Return $DISP_E_MEMBERNOTFOUND
+            ElseIf $tVARIANT.vt = $VT_I4 Or $tVARIANT.vt = $VT_I8 Then
+                $dispIdMember = DllStructGetData(DllStructCreate($tVARIANT.vt = $VT_I4 ? "INT" : "INT64", DllStructGetPtr($tVARIANT, 'data')), 1)
+                If $dispIdMember < 1 Then Return $DISP_E_MEMBERNOTFOUND
+            Else
+                Return $DISP_E_BADVARTYPE
+            EndIf
+
+            If $dispIdMember = -1 Then Return $DISP_E_MEMBERNOTFOUND
+        Else
+            ;FIXME: look for first parameter, to see if index is requested
+            ;VariantInit($pVariant) ;FIXME: it seems unclear if the return variant should go through VariantInit before usage?
+            Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
+            Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
+            $tVARIANT.vt = $VT_BSTR
+            $tVARIANT.data = DllStructGetData($tObject, "szTranslatedStruct")
+
+            Return $S_OK
+        EndIf
     EndIf
 
     If $dispIdMember < -1 Then
