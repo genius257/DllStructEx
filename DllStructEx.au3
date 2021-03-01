@@ -568,7 +568,7 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
     $tUnion.iType = $g__DllStructEx_eElementType_UNION
     $tUnion.szName = __DllStructEx_CreateString($sName)
     $tUnion.szStruct = __DllStructEx_CreateString($sUnionStruct)
-    If @error <> 0 Then Return SetError(@error, @extended, "") ;FIXME: not sure if @error from the function gets overriden by the internal handling of setting the struct variable
+    If @error <> 0 Then Return SetError(@error, @extended, "")
     $tUnions.Index += 1
 
     ;FIXME: test with nested union schenario.
