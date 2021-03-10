@@ -48,6 +48,7 @@ If @error <> 0 Then
 EndIf
 $tINPUT_RECORD = DllStructExGetStruct($txINPUT_RECORD) ;Get the normal DllStruct from the DllStructEx
 DllStructSetData($tINPUT_RECORD, "EventType", 123)
+ConsoleWrite($txINPUT_RECORD.EventType&@CRLF)
 
 $tKEY_EVENT_RECORD = DllStructExGetStruct($txINPUT_RECORD.Event.KeyEvent)
 DllStructSetData($tKEY_EVENT_RECORD, "bKeyDown", 1)
