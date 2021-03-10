@@ -6,6 +6,8 @@ This project adds missing functionality to DLLStruct's:
 * Support for union's
 * Allow nested structs
 
+Basically brining C-style structs to AutoIt3.
+
 See the example for usage.
 
 ## drawbacks
