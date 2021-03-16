@@ -258,8 +258,8 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
-                    $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
+                    Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    Local $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
                     $_tObject.pParent = $pSelf
                     __DllStructEx_AddRef($pSelf)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
@@ -269,8 +269,8 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                     $tElements.Index = $tElement.cElements
-                    $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
-                    $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
+                    Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                    Local $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
                     $_tObject.pParent = $pSelf
                     __DllStructEx_AddRef($pSelf)
                     __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
