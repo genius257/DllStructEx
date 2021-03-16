@@ -277,7 +277,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $DISP_E_EXCEPTION
                 Case Else
-                    If Not @Compiled Then ConsoleWriteError(StringFormat('ERROR: struct element type not supported "%d"\n', $tElement.iType))
+                    __DllStructEx_Error(StringFormat('struct element type not supported "%d"', $tElement.iType))
                     Return $DISP_E_EXCEPTION
             EndSwitch
             Return $S_OK
