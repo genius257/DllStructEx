@@ -73,18 +73,6 @@ Func DllStructExCreate($sStruct, $pData = 0)
         Local $tStruct = __DllStructEx_DllStructAlloc($sTranslatedStruct)
         If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct from the final translated structure string", 2, @error), @error, 0)
         $pData = DllStructGetPtr($tStruct)
-        ;FIXME: remove below if above code works.
-        #cs
-        $tStruct = __DllStructEx_DllStructAlloc($sTranslatedStruct)
-        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct from the final translated structure string", 2, @error), 0, 0)
-        Local $iStruct = DllStructGetSize($tStruct)
-        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to getting DllStruct size in bytes from the final translated structure string", 2, @error), 0, 0)
-        Local $hStruct = _MemGlobalAlloc($iStruct, $GMEM_MOVEABLE)
-        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to getting DllStruct size in bytes from the final translated structure string", 2, @error), 0, 0)
-        Local $pStruct = _MemGlobalLock($hStruct)
-        _MemMoveMemory(DllStructGetPtr($tStruct), $pStruct, $iStruct)
-        $pData = $pStruct
-        #ce
     Else
         If Not @Compiled Then ConsoleWriteError("WARNING: memory pointer will be freed on when object destructor is triggered! This can lead to unexpected behavor."&@CRLF)
         ;FIXME: should we copy memory, or should we just use the ptr, and have an object flag indicating if the $pData memory should be released on desctructor?
