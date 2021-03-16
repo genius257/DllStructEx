@@ -521,8 +521,19 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
     EndIf
 
     Local $tElement = DllStructCreate($g__DllStructEx_tagElement, DllStructGetPtr($tElements, "Elements") + $g__DllStructEx_iElement * $tElements.Index)
-    ;TODO: maybe we send $tElement instead of all of them, to reduce extra compute time?
+    
+    If Not ("" = $sPtr) Then
+        $tElement.iType = $g__DllStructEx_eElementType_PTR
+        $tElement.szName = __DllStructEx_CreateString($sName)
+        $tElement.szStruct = __DllStructEx_CreateString($sType)
+        $tElement.szTranslatedStruct = 0
+        $tElement.cElements = StringLen($sPtr)
+        $tElement.pElements = 0
+        $tElements.Index += 1
+        Return StringFormat("PTR %s;", $sName)
+    EndIf
 
+    ;TODO: maybe we send $tElement instead of all of them, to reduce extra compute time?
     $sType = __DllStructEx_ParseStructType($sType, $tElements)
     Local $iSize = @extended
     If @error <> 0 Then Return SetError(1, 0, "")
