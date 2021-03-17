@@ -455,7 +455,7 @@ Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
 EndFunc
 
 #cs
-# Parse struct.
+# Parse DllStructEx string.
 # @internal
 # @param string $sStruct
 # @return [string, DllStruct]
