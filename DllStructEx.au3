@@ -241,50 +241,106 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     EndIf
 
     If $dispIdMember > 0 Then
-        Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf - 8)
-        If $tObject.cElements >= $dispIdMember Then
-            Local $tElement = DllStructCreate($g__DllStructEx_tagElement, $tObject.pElements + $g__DllStructEx_iElement * ($dispIdMember - 1))
-            If @error <> 0 Then Return $DISP_E_EXCEPTION
-            Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
-            If @error <> 0 Then Return $DISP_E_EXCEPTION
-            Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
-            If @error <> 0 Then Return $DISP_E_EXCEPTION
-            Switch $tElement.iType
-                Case $g__DllStructEx_eElementType_Element
-                    Local $vData = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName, True));TODO: add support for getting struct data slice by index
-                    __DllStructEx_DataToVariant($vData, $tVARIANT)
-                    If @error <> 0 Then Return $DISP_E_EXCEPTION
-                Case $g__DllStructEx_eElementType_STRUCT
-                    Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
-                    If @error <> 0 Then Return $DISP_E_EXCEPTION
-                    $tElements.Index = $tElement.cElements
-                    Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
-                    Local $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
-                    $_tObject.pParent = $pSelf
-                    __DllStructEx_AddRef($pSelf)
-                    __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
-                    __DllStructEx_DataToVariant($vData, $tVARIANT)
-                    If @error <> 0 Then Return $DISP_E_EXCEPTION
-                Case $g__DllStructEx_eElementType_UNION
-                    Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
-                    If @error <> 0 Then Return $DISP_E_EXCEPTION
-                    $tElements.Index = $tElement.cElements
-                    Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
-                    Local $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
-                    $_tObject.pParent = $pSelf
-                    __DllStructEx_AddRef($pSelf)
-                    __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
-                    __DllStructEx_DataToVariant($vData, $tVARIANT)
-                    If @error <> 0 Then Return $DISP_E_EXCEPTION
-                Case Else
-                    __DllStructEx_Error(StringFormat('struct element type not supported "%d"', $tElement.iType))
-                    Return $DISP_E_EXCEPTION
-            EndSwitch
-            Return $S_OK
-        EndIf
+        Return __DllStructEx_Invoke_ProcessElement($pSelf, $pVarResult, $dispIdMember)
     EndIf
 
     Return $DISP_E_MEMBERNOTFOUND
+EndFunc
+
+#cs
+# Extracts member from object and assigns the converted value to the provided variant pointer.
+# This needed to be it's own function, to allow recursive calls.
+# @internal
+# @param ptr $pSelf Pointer to the Object member of a DllStructEx_tagObject structure
+# @param ptr $pVarResult Pointer to the variant where the result will be stored.
+# @param int $dispIdMember The requested member identifier.
+# @return long The HRESULT, indicating success state.
+#ce
+Func __DllStructEx_Invoke_ProcessElement($pSelf, $pVarResult, $dispIdMember)
+    Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf - 8)
+    If $tObject.cElements >= $dispIdMember Then
+        Local $tElement = DllStructCreate($g__DllStructEx_tagElement, $tObject.pElements + $g__DllStructEx_iElement * ($dispIdMember - 1))
+        If @error <> 0 Then Return $DISP_E_EXCEPTION
+        Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
+        If @error <> 0 Then Return $DISP_E_EXCEPTION
+        Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
+        If @error <> 0 Then Return $DISP_E_EXCEPTION
+        Switch $tElement.iType
+            Case $g__DllStructEx_eElementType_Element
+                Local $vData = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName, True));TODO: add support for getting struct data slice by index
+                __DllStructEx_DataToVariant($vData, $tVARIANT)
+                If @error <> 0 Then Return $DISP_E_EXCEPTION
+            Case $g__DllStructEx_eElementType_STRUCT
+                Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
+                If @error <> 0 Then Return $DISP_E_EXCEPTION
+                $tElements.Index = $tElement.cElements
+                Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                Local $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
+                $_tObject.pParent = $pSelf
+                __DllStructEx_AddRef($pSelf)
+                __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
+                __DllStructEx_DataToVariant($vData, $tVARIANT)
+                If @error <> 0 Then Return $DISP_E_EXCEPTION
+            Case $g__DllStructEx_eElementType_UNION
+                Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
+                If @error <> 0 Then Return $DISP_E_EXCEPTION
+                $tElements.Index = $tElement.cElements
+                Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                Local $_tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($vData)-8)
+                $_tObject.pParent = $pSelf
+                __DllStructEx_AddRef($pSelf)
+                __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
+                __DllStructEx_DataToVariant($vData, $tVARIANT)
+                If @error <> 0 Then Return $DISP_E_EXCEPTION
+            Case $g__DllStructEx_eElementType_PTR
+                Local $iPtrLevelCount = $tElement.cElements
+                Local $sType = _WinAPI_GetString($tElement.szStruct)
+                Local $pLevel = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName))
+                Local $iLevel = 1
+                For $iLevel = 1 To $iPtrLevelCount - 1 Step +1 ;This loop handles all but final ptr.
+                    If 0 = $pLevel Then
+                        __DllStructEx_Error("ptr ref empty")
+                        Return $DISP_E_EXCEPTION;FIXME: should we return null instead of throwing an exception, or maybe do both?
+                    EndIf
+                    $pLevel = DllStructGetData(DllStructCreate("PTR", $pLevel), 1)
+                Next
+
+                If 0 = $pLevel Then
+                    __DllStructEx_Error("ptr ref empty")
+                    Return $DISP_E_EXCEPTION;FIXME: should we return null instead of throwing an exception, or maybe do both?
+                EndIf
+
+                Switch $sType
+                    Case 'IUnknown'
+                        $tVariant.vt = $VT_UNKNOWN
+                        $tVariant.data = $pLevel
+                        Return $S_OK
+                    Case 'IDispatch'
+                        $tVariant.vt = $VT_DISPATCH
+                        $tVariant.data = $pLevel
+                        Return $S_OK
+                    Case Else
+                        Local $tElements = DllStructCreate(StringFormat($g__DllStructEx_tagElements, $g__DllStructEx_iElement))
+                        $tElements.iSize = 1; NOTE: maybe this line is not needed. Look into it, for optimization.
+
+                        Local $sTranslatedType = __DllStructEx_ParseStructType($sType, $tElements)
+                        
+                        $_tObject = DllStructCreate($g__DllStructEx_tagObject)
+                        $_tObject.cElements = 1
+                        $_tObject.pElements = DllStructGetPtr($tElements, "Elements")
+                        $_tObject.pStruct = $pLevel
+                        $_tObject.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
+                        $iResponse = __DllStructEx_Invoke_ProcessElement(DllStructGetPtr($_tObject, "Object"), $pVarResult, 1)
+                        ;Cleanup manually managed memory, before returning
+                        _WinAPI_FreeMemory($_tObject.szTranslatedStruct)
+                        Return $iResponse
+                EndSwitch
+            Case Else
+                __DllStructEx_Error(StringFormat('struct element type not supported "%d"', $tElement.iType))
+                Return $DISP_E_EXCEPTION
+        EndSwitch
+        Return $S_OK
+    EndIf
 EndFunc
 
 #cs
