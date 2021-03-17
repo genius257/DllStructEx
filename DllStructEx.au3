@@ -460,7 +460,7 @@ EndFunc
 # @param string $sStruct
 # @return [string, DllStruct]
 #ce
-Func __DllStructEx_ParseStruct($sStruct);FIXME: parseStruct may not be correct naming, as we need to parse nested struct elements this may be confusing. maybe change?
+Func __DllStructEx_ParseStruct($sStruct)
     ;FIXME: regexp should be used to verify the struct is valid, so not only part of the struct is parsed.
     Local $aStructLineDeclarations = StringRegExp($sStruct, $g__DllStructEx_sStructRegex&"(?&struct_line_declaration)", 3)
     If @error <> 0 Then Return SetError(1, @error, "")
@@ -477,8 +477,8 @@ Func __DllStructEx_ParseStruct($sStruct);FIXME: parseStruct may not be correct n
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for union-declaration failed", 2), @error, "")
                 $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements)
             Case StringRegExp($sStructLineDeclaration, $g__DllStructEx_sStructRegex&"^(?&struct);$", $STR_REGEXPMATCH);TODO: should the semicolon be optional in the regex?
-                ;FIXME: parse struct
-                ConsoleWriteError("STRUCT!"&@CRLF)
+                Local $_aStruct = StringRegExp($sStructLineDeclaration, "(?i)^\s*struct\s*{(.*)}\s*(\w+)?;?$", $STR_REGEXPARRAYMATCH);FIXME: update regex to be more clear
+                $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements)
             Case StringRegExp($sStructLineDeclaration, $g__DllStructEx_sStructRegex&"^(?&declaration);$", $STR_REGEXPMATCH);TODO: should the semicolon be optional in the regex?
                 Local $aMatches = StringRegExp($sStructLineDeclaration, "^\s*(\w+)(?:\s+([*]*)(\w+))?;$", $STR_REGEXPARRAYMATCH);FIXME: update regex to be more clear
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-line-declaration failed", 2), @error, "")
@@ -568,7 +568,7 @@ EndFunc
 Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
     Local Static $anonymousElementCount
     Local $sType = $aMatches[0]
-    Local $sPtr = UBound($aMatches) > 1 ? $aMatches[1] : "" ;FIXME: solve issue so getting the element will result in the solved ptr as the ref
+    Local $sPtr = UBound($aMatches) > 1 ? $aMatches[1] : ""
     Local $sName = UBound($aMatches) > 2 ? $aMatches[2] : ""
 
     If "" = $sName Then
@@ -649,7 +649,7 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
             Case StringRegExp($sStructLineDeclaration, $g__DllStructEx_sStructRegex&"^(?&struct);$", $STR_REGEXPMATCH);TODO: should the semicolon be optional in the regex?
                 Local $aStruct = StringRegExp($sStructLineDeclaration, "(?i)^\s*struct\s*{(.*)}\s*(\w+)?;?$", $STR_REGEXPARRAYMATCH);FIXME: update regex to be more clear
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-declaration failed", 2), @error, "")
-                $sUnionStruct &= __DllStructEx_ParseNestedStruct($aStruct, $tElements);FIXME: add to the parsestruct function
+                $sUnionStruct &= __DllStructEx_ParseNestedStruct($aStruct, $tElements)
             Case StringRegExp($sStructLineDeclaration, $g__DllStructEx_sStructRegex&"^(?&declaration);$", $STR_REGEXPMATCH);TODO: should the semicolon be optional in the regex?
                 Local $aMatches = StringRegExp($sStructLineDeclaration, "^\s*(\w+)(?:\s+([*]*)(\w+))?;$", $STR_REGEXPARRAYMATCH);FIXME: update regex to be more clear
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-line-declaration failed", 2), @error, "")
@@ -706,7 +706,7 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
                 $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements)
             Case StringRegExp($sStructLineDeclaration, $g__DllStructEx_sStructRegex&"^(?&struct);$", $STR_REGEXPMATCH);TODO: should the semicolon be optional in the regex?
                 Local $_aStruct = StringRegExp($sStructLineDeclaration, "(?i)^\s*struct\s*{(.*)}\s*(\w+)?;?$", $STR_REGEXPARRAYMATCH);FIXME: update regex to be more clear
-                $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements);FIXME: add to the parsestruct function
+                $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements)
             Case StringRegExp($sStructLineDeclaration, $g__DllStructEx_sStructRegex&"^(?&declaration);$", $STR_REGEXPMATCH);TODO: should the semicolon be optional in the regex?
                 Local $aMatches = StringRegExp($sStructLineDeclaration, "^\s*(\w+)(?:\s+([*]*)(\w+))?;$", $STR_REGEXPARRAYMATCH);FIXME: update regex to be more clear
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-line-declaration failed", 2), @error, "")
