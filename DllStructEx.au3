@@ -207,7 +207,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     #ce
 
     If $dispIdMember = 0 Then
-        $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+        Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
         If $tDISPPARAMS.cArgs>1 Then Return $DISP_E_BADPARAMCOUNT
         If $tDISPPARAMS.cArgs = 1 Then
             Local $tVARIANT=DllStructCreate($g__DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
