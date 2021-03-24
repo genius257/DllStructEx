@@ -43,7 +43,7 @@ If Not IsDeclared("VT_EMPTY") Then Global Enum $VT_EMPTY,$VT_NULL,$VT_I2,$VT_I4,
     $VT_ARRAY=0x2000,$VT_BYREF=0x4000,$VT_RESERVED=0x8000,$VT_ILLEGAL=0xffff,$VT_ILLEGALMASKED=0xfff, _
     $VT_TYPEMASK=0xfff
 
-Global Const $g__DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;int cElements;ptr pElements;ptr pParent;"
+Global Const $g__DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;boolean ownPStruct;int cElements;ptr pElements;ptr pParent;"
 Global Const $g__DllStructEx_tagElement = "int iType;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
 #cs
 # The size of $g__DllStructEx_tagElement in bytes 
@@ -69,19 +69,22 @@ Func DllStructExCreate($sStruct, $pData = 0)
     Local $tElements = $aResult[1]
     ;ConsoleWrite($sTranslatedStruct&@CRLF);NOTE: for debugging
 
+    ;Indicating if struct ptr is self created and should be released on object desctruction
+    $ownPStruct = (0 = $pData)
+
     If $pData = 0 Then
         Local $tStruct = __DllStructEx_DllStructAlloc($sTranslatedStruct)
         If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct from the final translated structure string", 2, @error), @error, 0)
         $pData = DllStructGetPtr($tStruct)
-    Else
-        If Not @Compiled Then ConsoleWriteError("WARNING: memory pointer will be freed on when object destructor is triggered! This can lead to unexpected behavor."&@CRLF)
-        ;FIXME: should we copy memory, or should we just use the ptr, and have an object flag indicating if the $pData memory should be released on desctructor?
     EndIf
     DllStructCreate($sTranslatedStruct, $pData)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct from the final translated structure string, with data pointer", 2, @error), 0, 0)
 
     $oDllStructEx = __DllStructEx_Create($sStruct, $sTranslatedStruct, $tElements, $pData)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed creating DllStructEx(IDispatch) Object", 2, @extended), @error, 0)
+
+    $tObject = DllStructCreate($g__DllStructEx_tagObject, Ptr($oDllStructEx) - 8)
+    $tObject.ownPStruct = $ownPStruct
 
     Return $oDllStructEx
 EndFunc
@@ -124,6 +127,10 @@ Func __DllStructEx_Release($pSelf)
             _WinAPI_FreeMemory(DllStructGetData($tObject, "szStruct"))
             _WinAPI_FreeMemory(DllStructGetData($tObject, "szTranslatedStruct"))
             ;FIXME: release pElements data Tree!
+
+            If $tObject.ownPStruct Then
+                __DllStructEx_DllStructFree($tObject.pStruct)
+            EndIf
         Else
             __DllStructEx_Release($tObject.pParent)
         EndIf
