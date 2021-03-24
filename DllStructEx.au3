@@ -264,9 +264,15 @@ EndFunc
 # Extracts member from object and assigns the converted value to the provided variant pointer.
 # This needed to be it's own function, to allow recursive calls.
 # @internal
-# @param ptr $pSelf Pointer to the Object member of a DllStructEx_tagObject structure
-# @param ptr $pVarResult Pointer to the variant where the result will be stored.
-# @param int $dispIdMember The requested member identifier.
+# @param ptr    $pSelf        Pointer to the Object member of a DllStructEx_tagObject structure
+# @param int    $dispIdMember The requested member identifier.
+# @param ptr    $riid
+# @param int    $lcid
+# @param ushort $wFlags
+# @param ptr    $pDispParams
+# @param ptr    $pVarResult   Pointer to the variant where the result will be stored.
+# @param ptr    $pExcepInfo
+# @param ptr    $puArgErr
 # @return long The HRESULT, indicating success state.
 #ce
 Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispParams, $pVarResult, $pExcepInfo, $puArgErr)
