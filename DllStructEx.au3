@@ -615,7 +615,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
     If $iSize > 0 Then
         $tElement.szStruct = __DllStructEx_CreateString($sType)
         $tElement.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
-        ;$tElement.pStruct = ? ;FIXME: add ref to struct start pointer
+        ;$tElement.pStruct = ? ;NOTE: not needed here, only here for clarity
         $tElements.Index += 1
     EndIf
 
