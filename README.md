@@ -13,4 +13,4 @@ See the example for usage.
 ## drawbacks
 Speed.
 
-The soltion is implemented via a IDispatch interface. As a result, the calls to the object is slower than normal function calls.
+The solution is implemented via a IDispatch interface. As a result, the calls to the object is slower than normal function calls.
