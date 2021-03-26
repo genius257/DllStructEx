@@ -203,7 +203,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
 
     #cs
     ;For debugging: getting vt of autoit types
-    ;FIXME: remove this
+    ;TODO: remove this
     $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
     If $tDISPPARAMS.cArgs<>1 Then Return $DISP_E_BADPARAMCOUNT
     Local $tVARIANT=DllStructCreate($g__DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
@@ -239,7 +239,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
 
             If $dispIdMember = -1 Then Return $DISP_E_MEMBERNOTFOUND
         Else
-            ;VariantInit($pVariant) ;FIXME: it seems unclear if the return variant should go through VariantInit before usage?
+            ;VariantInit($pVariant) ;TODO: it seems unclear if the return variant should go through VariantInit before usage?
             Local $tObject = DllStructCreate($g__DllStructEx_tagObject, $pSelf-8)
             Local $tVARIANT = DllStructCreate($g__DllStructEx_tagVARIANT, $pVarResult)
             $tVARIANT.vt = $VT_BSTR
