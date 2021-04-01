@@ -49,6 +49,8 @@ EndIf
 $tINPUT_RECORD = DllStructExGetStruct($txINPUT_RECORD) ;Get the normal DllStruct from the DllStructEx
 DllStructSetData($tINPUT_RECORD, "EventType", 123)
 ConsoleWrite($txINPUT_RECORD.EventType&@CRLF)
+$txINPUT_RECORD.EventType = 321
+ConsoleWrite(DllStructGetData($tINPUT_RECORD, "EventType")&@CRLF)
 
 $tKEY_EVENT_RECORD = DllStructExGetStruct($txINPUT_RECORD.Event.KeyEvent)
 DllStructSetData($tKEY_EVENT_RECORD, "bKeyDown", 1)
@@ -56,4 +58,5 @@ DllStructSetData($tKEY_EVENT_RECORD, "bKeyDown", 1)
 ConsoleWrite($txINPUT_RECORD.Event.KeyEvent.bKeyDown&@CRLF)
 $keyEvent = $txINPUT_RECORD.Event.KeyEvent
 ConsoleWrite($KeyEvent(1)&@CRLF);getting value of index 1: bKeyDown
+$keyEvent = 0
 $txINPUT_RECORD = 0
