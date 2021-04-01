@@ -476,8 +476,17 @@ Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
             Local $tData = DllStructCreate("PTR data;", DllStructGetPtr($tVARIANT, 'data'))
             $tData.data = $vData
         Case 'Object'
-            ;FIXME: QueryInterface to check if it's a IDispatch
-            $tVARIANT.vt = $VT_DISPATCH
+            Local $tGUID = DllStructCreate("byte[16]")
+            Local $pRIID = DllCall("ole32.dll", "LONG", "CLSIDFromString", "wstr", $IID_IDispatch, "struct*", $tGUID)
+            Local $pQueryInterface = DllStructGetData(DllStructCreate("PTR", DllStructGetData(DllStructCreate("PTR", Ptr($vData)), 1)), 1)
+            Local $pObj = DllStructCreate("ptr")
+            Local $response = DllCallAddress("LONG", $pQueryInterface, "ptr", Ptr($vData), "struct*", $tGUID, "ptr", DllStructGetPtr($pObj))
+            If @error <> 0 Then Return SetError(2, 0, $tVARIANT)
+            If $response[0] = $S_OK Then
+                Local $pRelease = DllStructGetData(DllStructCreate("PTR", DllStructGetData(DllStructCreate("PTR", DllStructGetData($pObj, 1)), 1) + (@AutoItX64 ? 8 : 4) * 2), 1)
+                DllCallAddress("dword", $pRelease, "PTR", DllStructGetData($pObj, 1)); release the idispatch object we got back
+            EndIf
+            $tVARIANT.vt = $response[0] = $S_OK ? $VT_DISPATCH : $VT_UNKNOWN
             Local $tData = DllStructCreate("PTR data;", DllStructGetPtr($tVARIANT, 'data'))
             $tData.data = $vData
         Case Else
