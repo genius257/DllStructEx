@@ -325,8 +325,6 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 __DllStructEx_DataToVariant($vData, $tVARIANT)
                 If @error <> 0 Then Return $DISP_E_EXCEPTION
             Case $g__DllStructEx_eElementType_PTR
-                If ((BitAND($wFlags, $DISPATCH_PROPERTYPUT)=$DISPATCH_PROPERTYPUT)) Then Return $DISP_E_EXCEPTION; FIXME: remove this, when propertyput is supported!
-                ;TODO support If ((BitAND($wFlags, $DISPATCH_PROPERTYPUT)=$DISPATCH_PROPERTYPUT)) Then ...
                 Local $iPtrLevelCount = $tElement.cElements
                 Local $sType = _WinAPI_GetString($tElement.szStruct)
                 Local $pLevel = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName))
@@ -346,10 +344,12 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
 
                 Switch $sType
                     Case 'IUnknown'
+                        If ((BitAND($wFlags, $DISPATCH_PROPERTYPUT)=$DISPATCH_PROPERTYPUT)) Then Return $DISP_E_EXCEPTION; FIXME: remove this, when propertyput is supported!
                         $tVariant.vt = $VT_UNKNOWN
                         $tVariant.data = $pLevel
                         Return $S_OK
                     Case 'IDispatch'
+                        If ((BitAND($wFlags, $DISPATCH_PROPERTYPUT)=$DISPATCH_PROPERTYPUT)) Then Return $DISP_E_EXCEPTION; FIXME: remove this, when propertyput is supported!
                         $tVariant.vt = $VT_DISPATCH
                         $tVariant.data = $pLevel
                         Return $S_OK
