@@ -64,9 +64,9 @@ Global Const $g__DllStructEx_sStructRegex_union = $g__DllStructEx_sStructRegex&"
 Global Const $g__DllStructEx_sStructRegex_struct = $g__DllStructEx_sStructRegex&"^(?&struct);$";TODO: should the semicolon be optional in the regex?
 Global Const $g__DllStructEx_sStructRegex_declaration = $g__DllStructEx_sStructRegex&"^(?&declaration);$";TODO: should the semicolon be optional in the regex?
 
-Global const $g__DllStructEx_sUnionRegex = "(?i)^\s*union\s*{(.*)}\s*(\w+)?;?$";FIXME: update regex to be more clear
-Global const $g__DllStructEx_sSubStructRegex = "(?i)^\s*struct\s*{(.*)}\s*(\w+)?;?$";FIXME: update regex to be more clear
-Global const $g__DllStructEx_sStructLineDeclaration = "^\s*(\w+)(?:\s+([*]*)(\w+))?;$";FIXME: update regex to be more clear
+Global const $g__DllStructEx_sUnionRegex = "(?i)^\s*union\s*{(.*)}\s*(\w+)?;?$"
+Global const $g__DllStructEx_sSubStructRegex = "(?i)^\s*struct\s*{(.*)}\s*(\w+)?;?$"
+Global const $g__DllStructEx_sStructLineDeclaration = "^\s*(\w+)(?:\s+([*]*)(\w+))?;$"
 
 #cs
 # Creates a C/C++ style structure.
