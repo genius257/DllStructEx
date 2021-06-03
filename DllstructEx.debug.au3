@@ -33,7 +33,6 @@ Func DllStructExDisplay($oDllStructEx)
 
     $__g_DllStructEx_DllStructExDisplay_treeviewID = GUICtrlCreateTreeView(0, 0, 400, 500)
     $__g_DllStructEx_DllStructExDisplay_hTreeView = GUICtrlGetHandle($__g_DllStructEx_DllStructExDisplay_treeviewID)
-    ConsoleWrite("$__g_DllStructEx_DllStructExDisplay_hTreeView: "&$__g_DllStructEx_DllStructExDisplay_hTreeView&@CRLF)
     
     _GUICtrlTreeView_BeginUpdate($__g_DllStructEx_DllStructExDisplay_treeviewID)
     __DllStructEx_DisplayPopulate($__g_DllStructEx_DllStructExDisplay_treeviewID, $tObject)
