@@ -134,8 +134,13 @@ Func __DllStructEx_DllStructExDisplay_WM_NOTIFY($hWnd, $iMsg, $wParam, $lParam)
                             GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iDllStructure, _WinAPI_GetString($tElement.szTranslatedStruct))
                         Case $__g_DllStructEx_eElementType_NONE
                             $sType = "NONE"
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iStructure, "")
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iDllStructure, "")
                         Case $__g_DllStructEx_eElementType_PTR
                             $sType = "PTR"
+                            ;FIXME: get correct information from ptr (dll struct)
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iStructure, "")
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iDllStructure, "")
                         Case $__g_DllStructEx_eElementType_STRUCT
                             $sType = "Struct"
                             GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iStructure, _WinAPI_GetString($tElement.szStruct))
@@ -146,6 +151,8 @@ Func __DllStructEx_DllStructExDisplay_WM_NOTIFY($hWnd, $iMsg, $wParam, $lParam)
                             GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iDllStructure, _WinAPI_GetString($tElement.szTranslatedStruct))
                         Case Else
                             $sType = "Unknown"
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iStructure, "")
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iDllStructure, "")
                     EndSwitch
                     GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iType, $sType)
 
