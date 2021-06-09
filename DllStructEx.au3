@@ -52,7 +52,7 @@ Global Enum $__g_DllStructEx_VT_EMPTY,$__g_DllStructEx_VT_NULL,$__g_DllStructEx_
     $__g_DllStructEx_VT_ARRAY=0x2000,$__g_DllStructEx_VT_BYREF=0x4000,$__g_DllStructEx_VT_RESERVED=0x8000,$__g_DllStructEx_VT_ILLEGAL=0xffff,$__g_DllStructEx_VT_ILLEGALMASKED=0xfff, _
     $__g_DllStructEx_VT_TYPEMASK=0xfff
 
-Global Const $__g_DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;boolean ownPStruct;int cElements;ptr pElements;ptr pParent;"
+Global Const $__g_DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;boolean ownPStruct;int cElements;ptr pElements;ptr pParent;BYTE bUnion;"
 Global Const $__g_DllStructEx_tagElement = "int iType;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
 #cs
 # The size of $__g_DllStructEx_tagElement in bytes 
@@ -293,7 +293,11 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
         Local $tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $pVarResult)
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
-        Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
+        If $tObject.bUnion = 1 Then
+            Local $tStruct = DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct, True)&" "&_WinAPI_GetString($tElement.szName, True), $tObject.pStruct);TODO: currently the name is missing from the element type struct. as a result is hacky way solves it for now.
+        Else
+            Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
+        EndIf
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
         Switch $tElement.iType
             Case $__g_DllStructEx_eElementType_Element
@@ -331,6 +335,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
                 Local $_tObject = DllStructCreate($__g_DllStructEx_tagObject, Ptr($vData)-8)
                 $_tObject.pParent = $pSelf
+                $_tObject.bUnion = 1
                 __DllStructEx_AddRef($pSelf)
                 __DllStructEx_AddRef(Ptr($vData)) ; add ref, as we pass it into a variant
                 __DllStructEx_DataToVariant($vData, $tVARIANT)
