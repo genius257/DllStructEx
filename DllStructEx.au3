@@ -800,6 +800,7 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
     $tUnion.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))))
 
     Local $iBytes = $tElements.Size
+    $tUnions.Size = $tUnions.Size < $iBytes ? $iBytes : $tUnions.Size
     Return StringFormat("BYTE %s[%d];", $sName, $iBytes)
 EndFunc
 
