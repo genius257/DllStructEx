@@ -1086,4 +1086,17 @@ Func __DllStructEx_FreeElements($tObject, $iLevel = 1)
     Next
 EndFunc
 
+#cs
+# Get the pointer to the struct or element in the struct.
+# @param DllStructEx $oDllStructEx A DllStructEx Object
+# @param int|string  $vElement     The element of the struct whose pointer you need, starting at 1 or the element name, as defined when the struct was created.
+# @return ptr
+#ce
+Func DllStructExGetPtr($oDllStructEx, $vElement = Null)
+    Local $tDllStructEx = DllStructExGetStruct($oDllStructEx)
+    If @error <> 0 Then Return SetError(3, 0, 0)
+    Local $ptr = (Not (Null = $vElement)) ? DllStructGetPtr($tDllStructEx, $vElement) : DllStructGetPtr($tDllStructEx)
+    Return SetError(@error, @extended, $ptr)
+EndFunc
+
 ;FIXME: add new helper function for overriding the pStruct value, if pOwnPStruct is false. (this will make it possible to re-use an DllStructEx object instead of discarding and re-creating for one small change.)
