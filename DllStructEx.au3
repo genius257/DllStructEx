@@ -529,7 +529,7 @@ Func __DllStructEx_DataToVariant($vData, $tVARIANT = Null)
             $tVARIANT.vt = BitOR($__g_DllStructEx_VT_ARRAY, $__g_DllStructEx_VT_BOOL)
             ;FIXME: support Binary
         #ce
-        Case 'Pointer'
+        Case 'Ptr'
             $tVARIANT.vt = @AutoItX64 ? $__g_DllStructEx_VT_UI8 : $__g_DllStructEx_VT_UI4
             Local $tData = DllStructCreate("PTR data;", DllStructGetPtr($tVARIANT, 'data'))
             $tData.data = $vData
