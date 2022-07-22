@@ -1069,6 +1069,7 @@ Func __DllStructEx_FreeElements($tObject, $iLevel = 1)
             Case $__g_DllStructEx_eElementType_PTR
                 _WinAPI_FreeMemory(DllStructGetData($tElement, "szName"))
                 _WinAPI_FreeMemory(DllStructGetData($tElement, "szStruct"))
+                _WinAPI_FreeMemory(DllStructGetData($tElement, "szTranslatedStruct"))
             Case $__g_DllStructEx_eElementType_Element
                 _WinAPI_FreeMemory(DllStructGetData($tElement, "szName"))
                 _WinAPI_FreeMemory(DllStructGetData($tElement, "szStruct"))
