@@ -293,7 +293,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
         Local $tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $pVarResult)
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
-        If $tObject.bUnion = 1 And ($tElement.iType = $__g_DllStructEx_eElementType_UNION Or $tElement.iType = $__g_DllStructEx_eElementType_Element) Then;FIXME: test with ptr
+        If $tObject.bUnion = 1 And ($tElement.iType = $__g_DllStructEx_eElementType_UNION Or $tElement.iType = $__g_DllStructEx_eElementType_Element Or $tElement.iType = $__g_DllStructEx_eElementType_PTR) Then
             Local $tStruct = DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct, True)&" "&_WinAPI_GetString($tElement.szName, True), $tObject.pStruct);TODO: currently the name is missing from the element type struct. as a result is hacky way solves it for now.
         Else
             Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
@@ -717,7 +717,7 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
         $tElement.iType = $__g_DllStructEx_eElementType_PTR
         $tElement.szName = __DllStructEx_CreateString($sName)
         $tElement.szStruct = __DllStructEx_CreateString($sType)
-        $tElement.szTranslatedStruct = 0
+        $tElement.szTranslatedStruct = __DllStructEx_CreateString("PTR")
         $tElement.cElements = StringLen($sPtr)
         $tElement.pElements = 0
         $tElements.Index += 1
