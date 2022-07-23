@@ -10,6 +10,7 @@ Global $__g_DllStructEx_DllStructExDisplay_treeviewID
 Global $__g_DllStructEx_DllStructExDisplay_hTreeView
 Global $__g_DllStructEx_DllStructExDisplay_iName
 Global $__g_DllStructEx_DllStructExDisplay_iType
+Global $__g_DllStructEx_DllStructExDisplay_iSize
 Global $__g_DllStructEx_DllStructExDisplay_iStructure
 Global $__g_DllStructEx_DllStructExDisplay_iDllStructure
 
@@ -26,10 +27,12 @@ Func DllStructExDisplay($oDllStructEx)
     $__g_DllStructEx_DllStructExDisplay_iName = GUICtrlCreateInput("", 450, 10, 240, -1, $ES_READONLY)
     GUICtrlCreateLabel("Type:", 410, 38)
     $__g_DllStructEx_DllStructExDisplay_iType = GUICtrlCreateInput("", 450, 35, 240, -1, $ES_READONLY)
-    GUICtrlCreateLabel("Structure:", 410, 70)
-    $__g_DllStructEx_DllStructExDisplay_iStructure = GUICtrlCreateEdit("", 410, 90, 280, 170, $ES_READONLY)
-    GUICtrlCreateLabel("DllStructure:", 410, 280)
-    $__g_DllStructEx_DllStructExDisplay_iDllStructure = GUICtrlCreateEdit("", 410, 300, 280, 170, $ES_READONLY)
+    GUICtrlCreateLabel("Size:", 410, 63)
+    $__g_DllStructEx_DllStructExDisplay_iSize = GUICtrlCreateInput("", 450, 60, 240, -1, $ES_READONLY)
+    GUICtrlCreateLabel("Structure:", 410, 95)
+    $__g_DllStructEx_DllStructExDisplay_iStructure = GUICtrlCreateEdit("", 410, 115, 280, 170, $ES_READONLY)
+    GUICtrlCreateLabel("DllStructure:", 410, 305)
+    $__g_DllStructEx_DllStructExDisplay_iDllStructure = GUICtrlCreateEdit("", 410, 325, 280, 170, $ES_READONLY)
 
     $__g_DllStructEx_DllStructExDisplay_treeviewID = GUICtrlCreateTreeView(0, 0, 400, 500)
     $__g_DllStructEx_DllStructExDisplay_hTreeView = GUICtrlGetHandle($__g_DllStructEx_DllStructExDisplay_treeviewID)
@@ -167,6 +170,21 @@ Func __DllStructEx_DllStructExDisplay_WM_NOTIFY($hWnd, $iMsg, $wParam, $lParam)
                             GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iDllStructure, "")
                     EndSwitch
                     GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iType, $sType)
+                    Switch ($tElement.iType)
+                        Case $__g_DllStructEx_eElementType_UNION
+                            Local $iSize = 0
+                            Local $iElementSize = 0
+                            Local $pElements = $tElement.pElements
+                            Local $_tElement
+                            For $i = 0 To $tElement.cElements - 1
+                                $_tElement = DllStructCreate($__g_DllStructEx_tagElement, $pElements + $__g_DllStructEx_iElement * $i)
+                                $iElementSize = DllStructGetSize(DllStructCreate(_WinAPI_GetString($_tElement.szTranslatedStruct)))
+                                $iSize = $iElementSize > $iSize ? $iElementSize : $iSize
+                            Next
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iSize, $iSize)
+                        Case Else
+                            GUICtrlSetData($__g_DllStructEx_DllStructExDisplay_iSize, DllStructGetSize(DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct))))
+                    EndSwitch
 
                     ;ConsoleWrite("change"&@CRLF)
                     ;ConsoleWrite($hItem)
