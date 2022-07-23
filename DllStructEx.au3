@@ -63,7 +63,7 @@ Global Const $__g_DllStructEx_tagElements = "INT Index;INT Size;BYTE Elements[%d
 
 Global Enum $__g_DllStructEx_eElementType_NONE, $__g_DllStructEx_eElementType_UNION, $__g_DllStructEx_eElementType_STRUCT, $__g_DllStructEx_eElementType_Element, $__g_DllStructEx_eElementType_PTR
 
-Global Const $__g_DllStructEx_sStructRegex = "(?ix)(?(DEFINE)(?<hn>[\h\n])(?<struct_line_declaration>(?:(?&declaration)|(?&struct)|(?&union));)(?<union>union(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)(?<struct>struct(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)(?<declaration>(?&type)\h+(?&identifier))(?<type>\w+)(?<identifier>[*]*\w+))"
+Global Const $__g_DllStructEx_sStructRegex = "(?ix)(?(DEFINE)(?<hn>[\h\n])(?<struct_line_declaration>(?:(?&declaration)|(?&struct)|(?&union));)(?<union>union(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)(?<struct>struct(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)(?<declaration>(?&hn)*(?&type)\h+(?&identifier)(?&hn)*)(?<type>\w+)(?<identifier>[*]*\w+))"
 Global Const $__g_DllStructEx_sStructRegex_union = $__g_DllStructEx_sStructRegex&"^(?&union);$";TODO: should the semicolon be optional in the regex?
 Global Const $__g_DllStructEx_sStructRegex_struct = $__g_DllStructEx_sStructRegex&"^(?&struct);$";TODO: should the semicolon be optional in the regex?
 Global Const $__g_DllStructEx_sStructRegex_declaration = $__g_DllStructEx_sStructRegex&"^(?&declaration);$";TODO: should the semicolon be optional in the regex?
@@ -594,7 +594,7 @@ EndFunc
 # @return [string, DllStruct]
 #ce
 Func __DllStructEx_ParseStruct($sStruct)
-    If Not StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"^(?&struct_line_declaration)+$", 0) Then Return SetError(__DllStructEx_Error("Regex validation for the entire struct provided failed!", 3), @error, "")
+    If Not StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"^(?&hn)*(?&struct_line_declaration)+(?&hn)*$", 0) Then Return SetError(__DllStructEx_Error("Regex validation for the entire struct provided failed!", 3), @error, "")
     Local $aStructLineDeclarations = StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"(?&struct_line_declaration)", 3)
     If @error <> 0 Then Return SetError(1, @error, "")
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
