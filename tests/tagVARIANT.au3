@@ -80,6 +80,9 @@ $tagDECIMAL = _
   "  ULONGLONG Lo64;"& _
   "} DUMMYUNIONNAME2;"
 
+$typeVARTYPE = "USHORT"
+$typeLONGLONG = "INT64"
+
 $txVariant = DllStructExCreate($tagVARIANT)
 If @error <> 0 Then Exit MsgBox(0, "Unexpected error", @error)
 ConsoleWrite("Final result:"&@CRLF)
