@@ -293,8 +293,18 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
         Local $tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $pVarResult)
         If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
-        If $tObject.bUnion = 1 And ($tElement.iType = $__g_DllStructEx_eElementType_UNION Or $tElement.iType = $__g_DllStructEx_eElementType_Element Or $tElement.iType = $__g_DllStructEx_eElementType_PTR) Then
+        If $tObject.bUnion = 1 And ($tElement.iType = $__g_DllStructEx_eElementType_Element Or $tElement.iType = $__g_DllStructEx_eElementType_PTR) Then
             Local $tStruct = DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct, True)&" "&_WinAPI_GetString($tElement.szName, True), $tObject.pStruct);TODO: currently the name is missing from the element type struct. as a result is hacky way solves it for now.
+        ElseIf $tObject.bUnion = 1 Then
+            Local $sStruct = _WinAPI_GetString($tElement.szTranslatedStruct, True)
+             ;anonymize declarations
+            $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
+            ;set identifier on first declaration, for ptr lookup
+            $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&_WinAPI_GetString($tElement.szName, True)&"$10;", 1)
+            ;apply semicolon to EOS
+            $sStruct = StringRegExpReplace($sStruct, "(;?$)", ";", 1)
+
+            Local $tStruct = DllStructCreate($sStruct, $tObject.pStruct)
         Else
             Local $tStruct = DllStructCreate(_WinAPI_GetString($tObject.szTranslatedStruct, True), $tObject.pStruct)
         EndIf
@@ -608,7 +618,7 @@ Func __DllStructEx_ParseStruct($sStruct)
             Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_union, $STR_REGEXPMATCH)
                 Local $aUnion = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sUnionRegex, $STR_REGEXPARRAYMATCH)
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for union-declaration failed", 2), @error, "")
-                $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements)
+                $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements, $sStruct)
             Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_struct, $STR_REGEXPMATCH)
                 Local $_aStruct = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sSubStructRegex, $STR_REGEXPARRAYMATCH)
                 $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements)
@@ -675,7 +685,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
                 $tElement.szStruct = __DllStructEx_CreateString($sType)
                 $tElement.szTranslatedStruct = __DllStructEx_CreateString($sStruct)
                 $tElements.Index += 1
-                Return SetExtended($iSize, $sTranslatedType)
+                Return SetExtended($iSize, $sStruct)
             ElseIf IsDeclared("type" & $sType) Then
                 Local $sTranslatedType = __DllStructEx_ParseStructType(Eval("type" & $sType), $tElements)
                 If @error <> 0 Then Return SetError(__DllStructEx_Error(StringFormat('Parsing of struct in variable "type%s" failed.', $sType), 2), @error, "")
@@ -743,6 +753,22 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
         $tElements.Size = $tElements.Size < $iSize ? $iSize : $tElements.Size
     EndIf
 
+    If $iSize = 0 Then
+        Return $sType
+    EndIf
+
+    If $tElement.iType = $__g_DllStructEx_eElementType_STRUCT Then
+        ;anonymize declarations
+        $sType = StringRegExpReplace($sType, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
+        ;set identifier on first declaration, for ptr lookup
+        $sType = StringRegExpReplace($sType, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&$sName&"$10;", 1)
+        ;apply semicolon to EOS
+        $sType = StringRegExpReplace($sType, "(;?$)", ";", 1)
+        ;wrap in au3 struct indicator
+        $sType = "STRUCT;"&$sType&"ENDSTRUCT;"
+        Return $sType
+    EndIf
+
     Local $aType = StringRegExp($sType, "(\w+)(\[\d+\])?", 1)
     Return StringFormat("%s %s%s;", $aType[0], $sName, UBound($aType, 1) > 1 ? $aType[1] : "")
 EndFunc
@@ -754,7 +780,7 @@ EndFunc
 # @param DllStruct $tUnions
 # @return string
 #ce
-Func __DllStructEx_ParseUnion($aUnion, $tUnions)
+Func __DllStructEx_ParseUnion($aUnion, $tUnions, $sStruct)
     Local Static $anonymousUnionCount = 0
     ;$sStruct = __DllStructEx_StringRegExpReplaceCallbackEx($sStruct, "(?i)(^|;)\s*union\s*{([^}]+)}\s*(\w+)?", __DllStructEx_ParseUnion, 0, $tUnions)
     Local $sName = UBound($aUnion) > 1 ? $aUnion[1] : ""
@@ -784,7 +810,7 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
             Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_union, $STR_REGEXPMATCH)
                 Local $_aUnion = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sUnionRegex, $STR_REGEXPARRAYMATCH)
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for union-declaration failed", 2), @error, "")
-                $sUnionStruct &= __DllStructEx_ParseUnion($_aUnion, $tElements)
+                $sUnionStruct &= __DllStructEx_ParseUnion($_aUnion, $tElements, $sUnionStruct)
             Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_struct, $STR_REGEXPMATCH)
                 Local $aStruct = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sSubStructRegex, $STR_REGEXPARRAYMATCH)
                 If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-declaration failed", 2), @error, "")
@@ -798,6 +824,39 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
         EndSelect
     Next
 
+    ;extract all declaration lines
+    Local $aMatches = StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"(?&struct_line_declaration)", 3)
+
+    Local $iPaddingBytes = 0
+    If @error = 0 Then; if @error <> 0, we assume no matches are available.
+        ;extract type from declaration
+        Local $aMatches2 = StringRegExp($aMatches[UBound($aMatches)-1], $__g_DllStructEx_sStructRegex&"((?&type))\h+(?&identifier)", 1)
+
+        ;calculate the size of the type
+        __DllStructEx_ParseStructType($aMatches2[7], DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement)))
+
+        ;The size in bytes of the last element in $sStruct
+        Local $iSize = @extended
+        For $i = 0 To $tElements.Index - 1
+            Local $tElement = DllStructCreate($__g_DllStructEx_tagElement, DllStructGetPtr($tElements, "Elements") + $__g_DllStructEx_iElement * $i)
+            Local $sElementName = _WinAPI_GetString($tElement.szName)
+            Local $sElement = _WinAPI_GetString($tElement.szTranslatedStruct)
+
+            ;anonymize declarations
+            $sElement = StringRegExpReplace($sElement, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
+            ;set identifier on first declaration, for ptr lookup
+            $sElement = StringRegExpReplace($sElement, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&$sElementName&"$10;", 1)
+
+            Local $tCombined = DllStructCreate($sStruct&$sElement)
+
+            ;the number of bytes between last element in $sStruct and first element in $sElement
+            Local $iByteOffset = (DllStructGetPtr($tCombined, UBound($aMatches)+1) - DllStructGetPtr($tCombined, UBound($aMatches)))
+
+            ;We get the number of padding bytes between last element in $sStruct and first element in $sElement and store the most bytes padded.
+            If ($iByteOffset - $iSize) > $iPaddingBytes Then $iPaddingBytes = ($iByteOffset - $iSize)
+        Next
+    EndIf
+
     $tUnion.szTranslatedStruct = __DllStructEx_CreateString($sUnionStruct)
     $tUnion.cElements = $tElements.Index
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tUnion.cElements)
@@ -805,6 +864,7 @@ Func __DllStructEx_ParseUnion($aUnion, $tUnions)
 
     Local $iBytes = $tElements.Size
     $tUnions.Size = $tUnions.Size < $iBytes ? $iBytes : $tUnions.Size
+    If $iPaddingBytes > 0 Then Return StringFormat("BYTE[%d];BYTE %s[%d];", $iPaddingBytes, $sName, $iBytes);add padding bytes
     Return StringFormat("BYTE %s[%d];", $sName, $iBytes)
 EndFunc
 
@@ -843,7 +903,7 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
         Select
             Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_union, $STR_REGEXPMATCH)
                 Local $aUnion = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sUnionRegex, $STR_REGEXPARRAYMATCH)
-                $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements)
+                $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements, $sStruct)
             Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_struct, $STR_REGEXPMATCH)
                 Local $_aStruct = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sSubStructRegex, $STR_REGEXPARRAYMATCH)
                 $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements)
@@ -859,9 +919,19 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
     $tStruct.szTranslatedStruct = __DllStructEx_CreateString($sStruct)
     $tStruct.cElements = $tElements.Index
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tStruct.cElements)
-    $tStruct.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))))
+    $tStruct.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))));TODO: add explanation comment for this line.
+
+    ;anonymize declarations
+    $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
+    ;set identifier on first declaration, for ptr lookup
+    $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&$sName&"$10;", 1)
+    ;apply semicolon to EOS
+    $sStruct = StringRegExpReplace($sStruct, "(;?$)", ";", 1)
+    ;wrap in au3 struct indicator
+    $sStruct = "STRUCT;"&$sStruct&"ENDSTRUCT;"
 
     Local $iBytes = $tElements.Size
+    Return $sStruct
     Return StringFormat("STRUCT;BYTE %s[%d];ENDSTRUCT;", $sName, $iBytes)
 EndFunc
 
@@ -1097,7 +1167,7 @@ EndFunc
 # @param int|string  $vElement     The element of the struct whose pointer you need, starting at 1 or the element name, as defined when the struct was created.
 # @return ptr
 #ce
-Func DllStructExGetPtr($oDllStructEx, $vElement = Null)
+Func DllStructExGetPtr($oDllStructEx, $vElement = Null);FIXME: if vElement is Number/Int lookup name via pElements, as normal index is not consistant after struct ptr offset fix.
     Local $tDllStructEx = DllStructExGetStruct($oDllStructEx)
     If @error <> 0 Then Return SetError(3, 0, 0)
     Local $ptr = (Not (Null = $vElement)) ? DllStructGetPtr($tDllStructEx, $vElement) : DllStructGetPtr($tDllStructEx)
