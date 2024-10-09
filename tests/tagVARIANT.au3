@@ -61,7 +61,7 @@ $tagVARIANT = _
 "    } __VARIANT_NAME_2;"& _
 "    DECIMAL decVal;"& _
 "  } __VARIANT_NAME_1;"
-
+#cs
 $tagDECIMAL = _
   "USHORT wReserved;"& _
   "union {"& _
@@ -79,9 +79,25 @@ $tagDECIMAL = _
   "  } DUMMYSTRUCTNAME2;"& _
   "  ULONGLONG Lo64;"& _
   "} DUMMYUNIONNAME2;"
+#ce
+
+$tagDECIMAL = _
+  "WORD wReserved;"& _
+  "BYTE scale;"& _
+  "BYTE sign;"& _
+  "ULONG Hi32;"& _
+  "ULONGLONG Lo64;"
+
+$typeULONGLONG = "UINT64"
 
 $typeVARTYPE = "USHORT"
 $typeLONGLONG = "INT64"
+$typeVARIANT_BOOL = "SHORT"
+$typeSCODE = "LONG"
+$typeDATE = "DOUBLE"
+$typeBSTR = "PTR"
+$typePVOID = "HANDLE"
+$tagCY = "ULONG Lo;LONG Hi;"
 
 $txVariant = DllStructExCreate($tagVARIANT)
 If @error <> 0 Then Exit MsgBox(0, "Unexpected error", @error)
