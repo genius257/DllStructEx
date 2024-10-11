@@ -3,6 +3,8 @@
 #include <Memory.au3>
 #include <WinAPIMem.au3>
 
+#include "parser.au3"
+
 ;FIXME: verify if ptr objects made, have proper cleanup, as they make their memory JIT style!
 
 Global Const $__g_DllStructEx_IID_IUnknown = "{00000000-0000-0000-C000-000000000046}"
