@@ -1162,4 +1162,26 @@ Func DllStructExGetPtr($oDllStructEx, $vElement = Null);FIXME: if vElement is Nu
     Return SetError(@error, @extended, $ptr)
 EndFunc
 
+#cs
+# Anonymize and Tag Structure Declaration
+#
+# Anonymizes the members of a given structure declaration by removing their names,
+# adds a custom identifier to the first member for pointer offset lookup, 
+# and ensures the structure ends with a semicolon if missing.
+#
+# @param string $sStruct A string representing the translated structure to anonymize.
+# @param string $sIdentifier The identifier to use for the first member.
+# @return string
+#ce
+Func __DllStructEx_AnonymizeAndTagStruct($sStruct, $sIdentifier)
+    ;anonymize declarations
+    $sStruct = StringRegExpReplace($sStruct, "(\w+)\h+\w+(\[\d\])?(;|$)", "$1$2$3"); ((?&type))\h+(?&identifier)(\[\d+\])?(;|$)
+    ;set identifier on first declaration, for ptr lookup
+    $sStruct = StringRegExpReplace($sStruct, "(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$1$2 "&$sIdentifier&"$3;", 1)
+    ;apply semicolon to EOS
+    $sStruct = StringRegExpReplace($sStruct, "(;?$)", ";", 1)
+
+    Return $sStruct
+EndFunc
+
 ;FIXME: add new helper function for overriding the pStruct value, if pOwnPStruct is false. (this will make it possible to re-use an DllStructEx object instead of discarding and re-creating for one small change.)
