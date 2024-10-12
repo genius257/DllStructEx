@@ -65,15 +65,6 @@ Global Const $__g_DllStructEx_tagElements = "INT Index;INT Size;BYTE Elements[%d
 
 Global Enum $__g_DllStructEx_eElementType_NONE, $__g_DllStructEx_eElementType_UNION, $__g_DllStructEx_eElementType_STRUCT, $__g_DllStructEx_eElementType_Element, $__g_DllStructEx_eElementType_PTR
 
-Global Const $__g_DllStructEx_sStructRegex = "(?ix)(?(DEFINE)(?<hn>[\h\n])(?<struct_line_declaration>(?:(?&declaration)|(?&struct)|(?&union));)(?<union>union(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)(?<struct>struct(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)(?<declaration>(?&hn)*(?&type)\h+(?&identifier)(?&hn)*)(?<type>\w+)(?<identifier>[*]*\w+))"
-Global Const $__g_DllStructEx_sStructRegex_union = $__g_DllStructEx_sStructRegex&"^(?&union);$";TODO: should the semicolon be optional in the regex?
-Global Const $__g_DllStructEx_sStructRegex_struct = $__g_DllStructEx_sStructRegex&"^(?&struct);$";TODO: should the semicolon be optional in the regex?
-Global Const $__g_DllStructEx_sStructRegex_declaration = $__g_DllStructEx_sStructRegex&"^(?&declaration);$";TODO: should the semicolon be optional in the regex?
-
-Global Const $__g_DllStructEx_sUnionRegex = "(?i)^\s*union\s*{(.*)}\s*(\w+)?;?$"
-Global Const $__g_DllStructEx_sSubStructRegex = "(?i)^\s*struct\s*{(.*)}\s*(\w+)?;?$"
-Global Const $__g_DllStructEx_sStructLineDeclaration = "^\s*(\w+)(?:\s+([*]*)(\w+))?;$"
-
 #cs
 # Creates a C/C++ style structure.
 # @param string $sStruct A string representing the structure to create.
