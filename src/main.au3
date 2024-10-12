@@ -920,7 +920,6 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
 
     Local $iBytes = $tElements.Size
     Return $sStruct
-    Return StringFormat("STRUCT;BYTE %s[%d];ENDSTRUCT;", $sName, $iBytes)
 EndFunc
 
 #cs
