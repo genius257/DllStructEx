@@ -918,7 +918,6 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
     ;wrap in au3 struct indicator
     $sStruct = "STRUCT;"&$sStruct&"ENDSTRUCT;"
 
-    Local $iBytes = $tElements.Size
     Return $sStruct
 EndFunc
 
