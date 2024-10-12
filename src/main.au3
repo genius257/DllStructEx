@@ -398,9 +398,6 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                             Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
                             If $tDISPPARAMS.cArgs<1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                             Local $_tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
-                            ;Local $vData = __DllStructEx_VariantToData($_tVARIANT)
-                            ;If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
-                            ;DllStructSetData($tStruct, _WinAPI_GetString($tElement.szName, True), $vData)
                             $pLevel = $_tVARIANT.data
                             DllStructSetData(DllStructCreate("PTR", $ppLevel), 1, $pLevel)
                         Else
