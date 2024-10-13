@@ -292,13 +292,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
         If $tObject.bUnion = 1 And ($tElement.iType = $__g_DllStructEx_eElementType_Element Or $tElement.iType = $__g_DllStructEx_eElementType_PTR) Then
             Local $tStruct = DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct, True)&" "&_WinAPI_GetString($tElement.szName, True), $tObject.pStruct);TODO: currently the name is missing from the element type struct. as a result is hacky way solves it for now.
         ElseIf $tObject.bUnion = 1 Then
-            Local $sStruct = _WinAPI_GetString($tElement.szTranslatedStruct, True)
-             ;anonymize declarations
-            $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
-            ;set identifier on first declaration, for ptr lookup
-            $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&_WinAPI_GetString($tElement.szName, True)&"$10;", 1)
-            ;apply semicolon to EOS
-            $sStruct = StringRegExpReplace($sStruct, "(;?$)", ";", 1)
+            Local $sStruct = __DllStructEx_AnonymizeAndTagStruct(_WinAPI_GetString($tElement.szTranslatedStruct, True), _WinAPI_GetString($tElement.szName, True))
 
             Local $tStruct = DllStructCreate($sStruct, $tObject.pStruct)
         Else
@@ -748,12 +742,7 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
     EndIf
 
     If $tElement.iType = $__g_DllStructEx_eElementType_STRUCT Then
-        ;anonymize declarations
-        $sType = StringRegExpReplace($sType, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
-        ;set identifier on first declaration, for ptr lookup
-        $sType = StringRegExpReplace($sType, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&$sName&"$10;", 1)
-        ;apply semicolon to EOS
-        $sType = StringRegExpReplace($sType, "(;?$)", ";", 1)
+        $sType = __DllStructEx_AnonymizeAndTagStruct($sType, $sName)
         ;wrap in au3 struct indicator
         $sType = "STRUCT;"&$sType&"ENDSTRUCT;"
         Return $sType
@@ -910,12 +899,8 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tStruct.cElements)
     $tStruct.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))));TODO: add explanation comment for this line.
 
-    ;anonymize declarations
-    $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"((?&type))(?:\h+(?&identifier))?(\[\d+\])?", "$8$9")
-    ;set identifier on first declaration, for ptr lookup
-    $sStruct = StringRegExpReplace($sStruct, $__g_DllStructEx_sStructRegex&"(?!STRUCT;)(^|;)(\w+)(\[\d+\])?;", "$8$9 "&$sName&"$10;", 1)
-    ;apply semicolon to EOS
-    $sStruct = StringRegExpReplace($sStruct, "(;?$)", ";", 1)
+    Local $sStruct = __DllStructEx_AnonymizeAndTagStruct($sTranslatedStruct, $sName)
+
     ;wrap in au3 struct indicator
     $sStruct = "STRUCT;"&$sStruct&"ENDSTRUCT;"
 
