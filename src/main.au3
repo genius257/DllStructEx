@@ -760,6 +760,7 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
     EndIf
 
     Local $aType = StringRegExp($sType, "(\w+)(\[\d+\])?", 1)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error(StringFormat('Parsing of struct in variable "%s" failed.', $sType), 2), @error, "")
     Return StringFormat("%s %s%s;", $aType[0], $sName, UBound($aType, 1) > 1 ? $aType[1] : "")
 EndFunc
 
