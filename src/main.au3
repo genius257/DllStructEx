@@ -862,13 +862,13 @@ EndFunc
 #cs
 # Callback for parsing a struct string (struct {...})
 # @internal
-# @param string[]  $aStruct
+# @param Map       $mStruct
 # @param DllStruct $tStructs
 # @return string
 #ce
-Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
+Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
     Local Static $anonymousStructCount = 0
-    Local $sName = UBound($aStruct) > 1 ? $aStruct[1] : ""
+    Local $sName = $mStruct.identifier = Null ? "" : $mStruct.identifier.name
     If $sName = "" Then
         $sName = StringFormat("_anonymousStruct%s", $anonymousStructCount)
         $anonymousStructCount += 1
@@ -881,32 +881,29 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for struct name", 2), @error, "")
     $tStructs.Index += 1
 
-    Local $aStructLineDeclarations = StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"(?&struct_line_declaration)", 3)
-    If @error <> 0 Then Return SetError(1, @error, "")
+    Local $aStructLineDeclarations = $mStruct.structLineDeclarations
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
 
-    $sStruct = ""
-    Local $i
-    Local $sStructLineDeclaration
+    Local $sTranslatedStruct = ""
+    Local $mStructLineDeclaration
     For $i = 0 To UBound($aStructLineDeclarations) - 1 Step +1
-        $sStructLineDeclaration = $aStructLineDeclarations[$i]
-        Select
-            Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_union, $STR_REGEXPMATCH)
-                Local $aUnion = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sUnionRegex, $STR_REGEXPARRAYMATCH)
-                $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements, $sStruct)
-            Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_struct, $STR_REGEXPMATCH)
-                Local $_aStruct = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sSubStructRegex, $STR_REGEXPARRAYMATCH)
-                $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements)
-            Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_declaration, $STR_REGEXPMATCH)
-                Local $aMatches = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructLineDeclaration, $STR_REGEXPARRAYMATCH)
-                If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-line-declaration failed", 2), @error, "")
-                $sStruct &= __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
+        $mStructLineDeclaration = $aStructLineDeclarations[$i]
+
+        Switch $mStructLineDeclaration.type
+            Case 'union'
+                $sTranslatedStruct &= __DllStructEx_ParseUnion($mStructLineDeclaration, $tElements, $sTranslatedStruct)
+            Case 'struct'
+                $sTranslatedStruct &= __DllStructEx_ParseNestedStruct($mStructLineDeclaration, $tElements)
+            Case 'declaration'
+                $sTranslatedStruct &= __DllStructEx_ParseStructTypeCallback($mStructLineDeclaration, $tElements)
             Case Else
-                ConsoleWriteError("a struct-line-declaration could not be recognized!")
-        EndSelect
+                Return SetError(__DllStructEx_Error("Unsupported struct-line-declaration type: " & $aStructLineDeclarations[$i].type, 4), @error, "")
+        EndSwitch
+
+        If @error <> 0 Then Return SetError(@error, @extended, Null)
     Next
 
-    $tStruct.szTranslatedStruct = __DllStructEx_CreateString($sStruct)
+    $tStruct.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedStruct)
     $tStruct.cElements = $tElements.Index
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tStruct.cElements)
     $tStruct.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))));TODO: add explanation comment for this line.
