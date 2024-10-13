@@ -69,16 +69,22 @@ EndFunc
 Func __DllStructEx_Parse_struct_line_declaration($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
     ; Save current position, will be used to restore the position between the function calls
     Local $iPos = InputStream_GetPos($tInputStream)
-    Local $result = __DllStructEx_Parse_declaration($tInputStream, False)
+    Local $result = __DllStructEx_Parse_align_directive($tInputStream, False)
     If Not (@error = 0) Then
-        InputStream_StepTo($tInputStream, $iPos)
-        $result = __DllStructEx_Parse_struct($tInputStream, False)
+        $result = __DllStructEx_Parse_struct_directive($tInputStream, False)
         If Not (@error = 0) Then
-            InputStream_StepTo($tInputStream, $iPos)
-            $result = __DllStructEx_Parse_union($tInputStream, False)
+            Local $result = __DllStructEx_Parse_declaration($tInputStream, False)
             If Not (@error = 0) Then
-                If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse struct line, expected declaration, struct or union, found "%s" at offset: %s', InputStream_Peek($tInputStream), InputStream_GetPos($tInputStream)))
-                Return SetError(1, 0, Null)
+                InputStream_StepTo($tInputStream, $iPos)
+                $result = __DllStructEx_Parse_struct($tInputStream, False)
+                If Not (@error = 0) Then
+                    InputStream_StepTo($tInputStream, $iPos)
+                    $result = __DllStructEx_Parse_union($tInputStream, False)
+                    If Not (@error = 0) Then
+                        If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse struct line, expected declaration, struct or union, found "%s" at offset: %s', InputStream_Peek($tInputStream), InputStream_GetPos($tInputStream)))
+                        Return SetError(1, 0, Null)
+                    EndIf
+                EndIf
             EndIf
         EndIf
     EndIf
@@ -459,6 +465,115 @@ Func __DllStructEx_Parse_identifier($tInputStream, $bErrorMessages = $__DllStruc
     Local $result[]
     $result['indirectionLevel'] = $iIndirectionLevel
     $result['name'] = $sName
+
+    Return $result
+EndFunc
+
+#cs
+# (?<struct_directive>(struct|endstruct)(?&hn)*(?=;))
+#ce
+Func __DllStructEx_Parse_struct_directive($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
+    Local $iPos = InputStream_GetPos($tInputStream)
+    If InputStream_PeekMany($tInputStream, 6) = "struct" Then
+        InputStream_StepForward($tInputStream, 6)
+    ElseIf InputStream_PeekMany($tInputStream, 9) = "endstruct" Then
+        InputStream_StepForward($tInputStream, 9)
+    Else
+        If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse struct directive, expected "struct" or "endstruct", found "%s" at offset: %s', InputStream_PeekMany($tInputStream, 6), InputStream_GetPos($tInputStream)))
+        Return SetError(1, 0, Null)
+    EndIf
+
+    Local $sContent = InputStream_GetSubstring($tInputStream, $iPos, InputStream_GetPos($tInputStream))
+
+    ; expect zero or more horizontal-spaces/newlines
+    Do
+        __DllStructEx_Parse_hn($tInputStream, False)
+    Until Not (@error = 0)
+
+    ; We check for a semicolon at the end of the struct, but we don't consume it.
+    If Not (InputStream_Peek($tInputStream) = ";") Then
+        If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse struct directive, expected ";", found "%s" at offset: %s', InputStream_Peek($tInputStream), InputStream_GetPos($tInputStream)))
+        Return SetError(1, 0, Null)
+    EndIf
+
+    Local $result[]
+    $result['type'] = 'directive'
+    $result['dataType'] = $sContent
+    $result['content'] = $sContent
+
+    Return $result
+EndFunc
+
+#cs
+# (?<align_directive>align\h+\d+(?&hn)*(?=;))
+#ce
+Func __DllStructEx_Parse_align_directive($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
+    Local $iPos = InputStream_GetPos($tInputStream)
+
+    If Not (InputStream_PeekMany($tInputStream, 5) = "align") Then
+        If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse align directive expected "align" at offset: %s', InputStream_GetPos($tInputStream)))
+        Return SetError(1, 0, Null)
+    EndIf
+
+    InputStream_StepForward($tInputStream, 5)
+
+    Local $sContent = InputStream_GetSubstring($tInputStream, $iPos, InputStream_GetPos($tInputStream))
+
+    ; Expect one or more horizontal spaces
+    #Region
+        If Not __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream)) Then
+            If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse align directive, expected horizontal whitespace, found "%s" at offset: %s', InputStream_Peek($tInputStream), InputStream_GetPos($tInputStream)))
+            Return SetError(1, 0, Null)
+        EndIf
+
+        InputStream_StepForward($tInputStream)
+
+        While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+            InputStream_StepForward($tInputStream)
+        WEnd
+    #EndRegion
+
+    ; Expect one or more digits
+    If StringIsDigit(InputStream_Peek($tInputStream)) Then
+        Local $boundary = InputStream_Consume($tInputStream)
+
+        While StringIsDigit(InputStream_Peek($tInputStream))
+            $boundary &= InputStream_Consume($tInputStream)
+        WEnd
+
+        $boundary = Int($boundary)
+        If @error <> 0 Then
+            If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to convert align boundary to integer at offset: %s', InputStream_GetPos($tInputStream)))
+            Return SetError(1, 0, Null)
+        EndIf
+        #cs
+        ;FIXME: we could check for valid boundary values
+        If $boundary <= 0 Then
+            If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Array size must be greater than zero at offset: %s', InputStream_GetPos($tInputStream)))
+            Return SetError(1, 0, Null)
+        EndIf
+        #ce
+    Else
+        If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse align directive, expected integer at offset: %s', InputStream_GetPos($tInputStream)))
+        Return SetError(1, 0, Null)
+    EndIf
+
+    ; expect zero or more horizontal-spaces/newlines
+    Do
+        __DllStructEx_Parse_hn($tInputStream, False)
+    Until Not (@error = 0)
+
+    ; We check for a semicolon at the end of the struct, but we don't consume it.
+    If Not (InputStream_Peek($tInputStream) = ";") Then
+        If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse struct directive, expected ";", found "%s" at offset: %s', InputStream_Peek($tInputStream), InputStream_GetPos($tInputStream)))
+        Return SetError(1, 0, Null)
+    EndIf
+
+    Local $result[]
+    $result['type'] = 'directive'
+    $result['dataType'] = $sContent
+    $result['content'] = $sContent & " " & $boundary
+    $result['boundary'] = $boundary
 
     Return $result
 EndFunc

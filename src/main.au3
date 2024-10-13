@@ -604,6 +604,8 @@ Func __DllStructEx_ParseStruct($tInputStream)
                 $sTranslatedStruct &= __DllStructEx_ParseNestedStruct($mStructLineDeclaration, $tElements)
             Case 'declaration'
                 $sTranslatedStruct &= __DllStructEx_ParseStructTypeCallback($mStructLineDeclaration, $tElements)
+            Case 'directive'
+                $sTranslatedStruct &= __DllStructEx_ParseDirective($mStructLineDeclaration, $tElements)
             Case Else
                 Return SetError(__DllStructEx_Error("Unsupported struct-line-declaration type: " & $aStructLineDeclarations[$i].type, 4), @error, "")
         EndSwitch
@@ -793,6 +795,8 @@ Func __DllStructEx_ParseUnion($mUnion, $tUnions, $sStruct)
                 $sTranslatedStruct &= __DllStructEx_ParseNestedStruct($mStructLineDeclaration, $tElements)
             Case 'declaration'
                 $sTranslatedStruct &= __DllStructEx_ParseStructTypeCallback($mStructLineDeclaration, $tElements)
+            Case 'directive'
+                $sTranslatedStruct &= __DllStructEx_ParseDirective($mStructLineDeclaration, $tElements)
             Case Else
                 Return SetError(__DllStructEx_Error("Unsupported struct-line-declaration type: " & $aStructLineDeclarations[$i].type, 4), @error, "")
         EndSwitch
@@ -895,6 +899,8 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
                 $sTranslatedStruct &= __DllStructEx_ParseNestedStruct($mStructLineDeclaration, $tElements)
             Case 'declaration'
                 $sTranslatedStruct &= __DllStructEx_ParseStructTypeCallback($mStructLineDeclaration, $tElements)
+            Case 'directive'
+                $sTranslatedStruct &= __DllStructEx_ParseDirective($mStructLineDeclaration, $tElements)
             Case Else
                 Return SetError(__DllStructEx_Error("Unsupported struct-line-declaration type: " & $aStructLineDeclarations[$i].type, 4), @error, "")
         EndSwitch
@@ -919,6 +925,13 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
     $tStructs.Size = $tStructs.Size < $iSize ? $iSize : $tStructs.Size
 
     Return $sStruct
+EndFunc
+
+Func __DllStructEx_ParseDirective($mDirective, $tElements)
+    Local $sDirective = $mDirective.content
+    Local $sTranslatedStruct = __DllStructEx_ParseStructType($mDirective.dataType, $tElements)
+    If @error <> 0 Then Return SetError(@error, @extended, Null)
+    Return $sDirective & ";"
 EndFunc
 
 #cs
