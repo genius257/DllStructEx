@@ -718,8 +718,11 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
     If $iIndirectionLevel > 0 Then
         $tElement.iType = $__g_DllStructEx_eElementType_PTR
         $tElement.szName = __DllStructEx_CreateString($sName)
+        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for element name", 4), @error, "")
         $tElement.szStruct = __DllStructEx_CreateString($sType)
+        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for element type", 5), @error, "")
         $tElement.szTranslatedStruct = __DllStructEx_CreateString("PTR")
+        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for element translated type", 6), @error, "")
         $tElement.cElements = $iIndirectionLevel
         $tElement.pElements = 0
         $tElements.Index += 1
