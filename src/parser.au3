@@ -5,7 +5,7 @@
 #cs
 # ^(?&hn)*(?&struct_line_declaration)+(?&hn)*$
 #ce
-Func __DllStructEx_ParseStruct($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
+Func __DllStructEx_Parse_Root($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
     ; expect zero or more horizontal-spaces/newlines
     Do
         __DllStructEx_Parse_hn($tInputStream, False)
