@@ -878,8 +878,7 @@ Func __DllStructEx_ParseNestedStruct($aStruct, $tStructs)
     $tStruct = DllStructCreate($__g_DllStructEx_tagElement, DllStructGetPtr($tStructs, "Elements") + $__g_DllStructEx_iElement * $tStructs.Index)
     $tStruct.iType = $__g_DllStructEx_eElementType_STRUCT
     $tStruct.szName = __DllStructEx_CreateString($sName)
-    $tStruct.szStruct = __DllStructEx_CreateString($sStruct)
-    If @error <> 0 Then Return SetError(@error, @extended, "")
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for struct name", 2), @error, "")
     $tStructs.Index += 1
 
     Local $aStructLineDeclarations = StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"(?&struct_line_declaration)", 3)
