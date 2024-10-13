@@ -670,9 +670,8 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
                 Local $sTranslatedType = __DllStructEx_ParseStructType(Eval("type" & $sType))
                 If @error <> 0 Then Return SetError(__DllStructEx_Error(StringFormat('Parsing of struct in variable "type%s" failed.', $sType), 2), @error, "")
                 $iSize = @extended
-            Elseif Not @Compiled Then
-                ;FIXME: return error
-                ConsoleWriteError(StringFormat('Error: Variable "tag%s" or "type%s" not defined!\n', $sType, $sType))
+            Else
+                Return SetError(__DllStructEx_Error(StringFormat('Error: Variable "tag%s" or "type%s" not defined!\n', $sType, $sType), 2), 0, "")
             EndIf
     EndSwitch
 
