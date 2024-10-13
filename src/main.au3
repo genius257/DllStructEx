@@ -593,10 +593,10 @@ EndFunc
 # @param string $sStruct
 # @return [string, DllStruct]
 #ce
-Func __DllStructEx_ParseStruct($sStruct)
-    If Not StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"^(?&hn)*(?&struct_line_declaration)+(?&hn)*$", 0) Then Return SetError(__DllStructEx_Error("Regex validation for the entire struct provided failed!", 3), @error, "")
-    Local $aStructLineDeclarations = StringRegExp($sStruct, $__g_DllStructEx_sStructRegex&"(?&struct_line_declaration)", 3)
-    If @error <> 0 Then Return SetError(1, @error, "")
+Func __DllStructEx_ParseStruct($tInputStream)
+    Local $aStructLineDeclarations = __DllStructEx_Parse_Root($tInputStream)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to parse the provided string", 2), @error, "")
+
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
 
     $sStruct = ""
