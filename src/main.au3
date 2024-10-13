@@ -913,6 +913,10 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
 
     ;wrap in au3 struct indicator
     $sStruct = "STRUCT;"&$sStruct&"ENDSTRUCT;"
+    ;NOTE: Reporting back struct size, used by union parsing
+    Local $iSize = DllStructGetSize(DllStructCreate($sStruct)); Quick way to get the size of the struct
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to get struct size", 7), @error, "")
+    $tStructs.Size = $tStructs.Size < $iSize ? $iSize : $tStructs.Size
 
     Return $sStruct
 EndFunc
