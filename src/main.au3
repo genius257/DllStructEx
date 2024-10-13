@@ -671,7 +671,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
                 ;$tElement.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sTranslatedType, DllStructCreate($sTranslatedType, DllStructGetPtr($_tElements, "Elements"))))
                 $tElement.szStruct = __DllStructEx_CreateString($sType)
                 $tElement.szTranslatedStruct = __DllStructEx_CreateString($sStruct)
-                $tElements.Index += 1
+                If IsDllStruct($tElements) Then $tElements.Index += 1
                 Return SetExtended($iSize, $sStruct)
             ElseIf IsDeclared("type" & $sType) Then
                 Local $sTranslatedType = __DllStructEx_ParseStructType(Eval("type" & $sType), $tElements)
@@ -687,7 +687,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
         $tElement.szStruct = __DllStructEx_CreateString($sType)
         $tElement.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
         ;$tElement.pStruct = ? ;NOTE: not needed here, only here for clarity
-        $tElements.Index += 1
+        If IsDllStruct($tElements) Then $tElements.Index += 1
     EndIf
 
     If Null = $iSize Then Return SetError(1, 0, "")
