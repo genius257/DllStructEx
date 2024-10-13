@@ -850,6 +850,7 @@ Func __DllStructEx_ParseUnion($mUnion, $tUnions, $sStruct)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to allocate and move memory for elements", 6), @error, "")
 
     Local $iBytes = $tElements.Size
+    If $iBytes <= 0 Then Return SetError(__DllStructEx_Error("Invalid struct size: " & $iBytes & " bytes, in struct: """ & $sTranslatedStruct & """", 5))
     $tUnions.Size = $tUnions.Size < $iBytes ? $iBytes : $tUnions.Size
     If $iPaddingBytes > 0 Then Return StringFormat("BYTE[%d];BYTE %s[%d];", $iPaddingBytes, $sName, $iBytes);add padding bytes
     Return StringFormat("BYTE %s[%d];", $sName, $iBytes)
