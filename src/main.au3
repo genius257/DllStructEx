@@ -646,9 +646,8 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
             $tElement.iType = $__g_DllStructEx_eElementType_NONE
             $iSize = 0
         Case Else
-            ;TODO: maybe we should assume type element, if the solved variable results in single native struct element type?
-            $tElement.iType = $__g_DllStructEx_eElementType_STRUCT
             If IsDeclared("tag" & $sType) Then
+                $tElement.iType = $__g_DllStructEx_eElementType_STRUCT
                 Local $tInputStream = InputStream(Eval("tag" & $sType))
                 Local $aResult = __DllStructEx_ParseStruct($tInputStream)
                 If @error <> 0 Then Return SetError(__DllStructEx_Error(StringFormat('Parsing of struct in variable "tag%s" failed.', $sType), 2), @error, "")
@@ -668,7 +667,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
                 If IsDllStruct($tElements) Then $tElements.Index += 1
                 Return SetExtended($iSize, $sStruct)
             ElseIf IsDeclared("type" & $sType) Then
-                Local $sTranslatedType = __DllStructEx_ParseStructType(Eval("type" & $sType), $tElements)
+                Local $sTranslatedType = __DllStructEx_ParseStructType(Eval("type" & $sType))
                 If @error <> 0 Then Return SetError(__DllStructEx_Error(StringFormat('Parsing of struct in variable "type%s" failed.', $sType), 2), @error, "")
                 $iSize = @extended
             Elseif Not @Compiled Then
