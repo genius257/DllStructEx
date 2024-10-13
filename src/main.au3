@@ -980,38 +980,6 @@ Func DllStructExGetSize($oDllStructEx)
 EndFunc
 
 #cs
-# Perform a regular expression search and replace using a callback.
-# @author Mat
-# @modifier genius257
-# @param string          $sString
-# @param string          $sPattern
-# @param function|string $sFunc
-# @param int             $iLimit
-# @param mixed           $vExtra
-# @return string
-#ce
-Func __DllStructEx_StringRegExpReplaceCallbackEx($sString, $sPattern, $sFunc, $iLimit = 0, $vExtra = Null)
-    Local $iOffset = 1, $iDone = 0, $iMatchOffset
-
-    While True
-        $aRes = StringRegExp($sString, $sPattern, 2, $iOffset)
-        If @error Then ExitLoop
-
-        $sRet = Call($sFunc, $aRes, $vExtra)
-        If @error Then Return SetError(@error, $iDone, $sString)
-
-        $iOffset = StringInStr($sString, $aRes[0], 1, 1, $iOffset)
-        $sString = StringLeft($sString, $iOffset - 1) & $sRet & StringMid($sString, $iOffset + StringLen($aRes[0]))
-        $iOffset += StringLen($sRet)
-
-        $iDone += 1
-        If $iDone = $iLimit Then ExitLoop
-    WEnd
-
-    Return SetExtended($iDone, $sString)
-EndFunc   ;==>StringRegExpReplaceCallback
-
-#cs
 # Allocate DllStruct memory
 # @internal
 # @param string         $sStruct
