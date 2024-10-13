@@ -702,11 +702,11 @@ EndFunc
 # @param DllStruct $tUnions
 # @return string
 #ce
-Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
+Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
     Local Static $anonymousElementCount
-    Local $sType = $aMatches[0]
-    Local $sPtr = UBound($aMatches) > 1 ? $aMatches[1] : ""
-    Local $sName = UBound($aMatches) > 2 ? $aMatches[2] : ""
+    Local $sType = $mDeclaration.dataType
+    Local $iIndirectionLevel = $mDeclaration.identifier = Null ? 0 : $mDeclaration.identifier.indirectionLevel
+    Local $sName = $mDeclaration.identifier = Null ? "" : $mDeclaration.identifier.name
 
     If "" = $sName Then
         $sName = StringFormat("_anonymousElement%d", $anonymousElementCount)
@@ -715,12 +715,12 @@ Func __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
 
     Local $tElement = DllStructCreate($__g_DllStructEx_tagElement, DllStructGetPtr($tElements, "Elements") + $__g_DllStructEx_iElement * $tElements.Index)
     
-    If Not ("" = $sPtr) Then
+    If $iIndirectionLevel > 0 Then
         $tElement.iType = $__g_DllStructEx_eElementType_PTR
         $tElement.szName = __DllStructEx_CreateString($sName)
         $tElement.szStruct = __DllStructEx_CreateString($sType)
         $tElement.szTranslatedStruct = __DllStructEx_CreateString("PTR")
-        $tElement.cElements = StringLen($sPtr)
+        $tElement.cElements = $iIndirectionLevel
         $tElement.pElements = 0
         $tElements.Index += 1
         Return StringFormat("PTR %s;", $sName)
