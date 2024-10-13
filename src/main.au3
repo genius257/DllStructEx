@@ -729,14 +729,13 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
         Return StringFormat("PTR %s;", $sName)
     EndIf
 
-    ;TODO: maybe we send $tElement instead of all of them, to reduce extra compute time?
     $sType = __DllStructEx_ParseStructType($sType, $tElements)
     Local $iSize = @extended
-    If @error <> 0 Then Return SetError(1, 0, "")
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to parse element type", 7), @error, "")
 
     If $iSize > 0 Then
         Local $pName = __DllStructEx_CreateString($sName)
-        If @error <> 0 Then Return SetError(2, @error, "")
+        If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for element name", 8), @error, "")
         $tElement.szName = $pName
     EndIf
 
