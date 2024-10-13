@@ -83,7 +83,7 @@ Func __DllStructEx_Parse_struct_line_declaration($tInputStream, $bErrorMessages 
         EndIf
     EndIf
 
-    If Not InputStream_Peek($tInputStream) = ";" Then
+    If Not (InputStream_Peek($tInputStream) = ";") Then
         If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to parse struct line expected ";", found "%s" at offset: %s', InputStream_Peek($tInputStream), InputStream_GetPos($tInputStream)))
         Return SetError(1, 0, Null)
     EndIf
