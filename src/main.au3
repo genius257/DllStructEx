@@ -770,14 +770,17 @@ Func __DllStructEx_ParseUnion($mUnion, $tUnions, $sStruct)
     EndIf
 
     $tUnion = DllStructCreate($__g_DllStructEx_tagElement, DllStructGetPtr($tUnions, "Elements") + $__g_DllStructEx_iElement * $tUnions.Index)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct to process union", 3), @error, "")
     $tUnion.iType = $__g_DllStructEx_eElementType_UNION
     $tUnion.szName = __DllStructEx_CreateString($sName)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for union name", 4), @error, "")
     $tUnion.szStruct = __DllStructEx_CreateString($mUnion.content)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for union content", 5), @error, "")
     $tUnions.Index += 1
 
     Local $aStructLineDeclarations = $mUnion.structLineDeclarations
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct to hold the parsed elements", 6), @error, "")
 
     Local $sTranslatedStruct = ""
     Local $mStructLineDeclaration
@@ -840,9 +843,11 @@ Func __DllStructEx_ParseUnion($mUnion, $tUnions, $sStruct)
     #EndRegion
 
     $tUnion.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedStruct)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for translated struct", 8), @error, "")
     $tUnion.cElements = $tElements.Index
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tUnion.cElements)
     $tUnion.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))))
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to allocate and move memory for elements", 6), @error, "")
 
     Local $iBytes = $tElements.Size
     $tUnions.Size = $tUnions.Size < $iBytes ? $iBytes : $tUnions.Size
@@ -874,6 +879,7 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
 
     Local $aStructLineDeclarations = $mStruct.structLineDeclarations
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct to hold the parsed elements", 4), @error, "")
 
     Local $sTranslatedStruct = ""
     Local $mStructLineDeclaration
@@ -895,9 +901,11 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
     Next
 
     $tStruct.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedStruct)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for translated struct", 8), @error, "")
     $tStruct.cElements = $tElements.Index
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tStruct.cElements)
     $tStruct.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))));TODO: add explanation comment for this line.
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to allocate and move memory for elements", 6), @error, "")
 
     Local $sStruct = __DllStructEx_AnonymizeAndTagStruct($sTranslatedStruct, $sName)
 
