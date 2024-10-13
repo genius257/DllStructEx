@@ -10,7 +10,7 @@ Func InputStream($sInput)
 EndFunc
 
 Func InputStream_PeekMany($t, $iCount)
-    If $t.pos + $iCount > $t.length Then $iCount = $t.length - $t.pos
+    If $t.pos + $iCount > $t.length Then $iCount = $t.length - $t.pos + 1
     ; Position times 2, because we are dealing with a WCHAR array
     Local $_t = DllStructCreate("WCHAR["&$iCount&"]", DllStructGetPtr($t, "input") + ($t.pos - 1) * 2)
     Return DllStructGetData($_t, 1)
