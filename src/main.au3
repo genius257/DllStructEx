@@ -717,6 +717,8 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
         If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for element translated type", 6), @error, "")
         $tElement.cElements = $iIndirectionLevel
         $tElement.pElements = 0
+        Local $iSize = @AutoItX64 ? 8 : 4 ; Size of pointer in bytes
+        $tElements.Size = $tElements.Size < $iSize ? $iSize : $tElements.Size
         $tElements.Index += 1
         Return StringFormat("PTR %s;", $sName)
     EndIf
