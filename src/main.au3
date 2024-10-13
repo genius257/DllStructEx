@@ -600,30 +600,25 @@ Func __DllStructEx_ParseStruct($tInputStream)
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct to hold the parsed elements", 3), @error, "")
 
-    $sStruct = ""
-    Local $i
-    Local $sStructLineDeclaration
+    Local $sTranslatedStruct = ""
     For $i = 0 To UBound($aStructLineDeclarations) - 1 Step +1
-        $sStructLineDeclaration = $aStructLineDeclarations[$i]
-        Select
-            Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_union, $STR_REGEXPMATCH)
-                Local $aUnion = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sUnionRegex, $STR_REGEXPARRAYMATCH)
-                If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for union-declaration failed", 2), @error, "")
-                $sStruct &= __DllStructEx_ParseUnion($aUnion, $tElements, $sStruct)
-            Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_struct, $STR_REGEXPMATCH)
-                Local $_aStruct = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sSubStructRegex, $STR_REGEXPARRAYMATCH)
-                $sStruct &= __DllStructEx_ParseNestedStruct($_aStruct, $tElements)
-            Case StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructRegex_declaration, $STR_REGEXPMATCH)
-                Local $aMatches = StringRegExp($sStructLineDeclaration, $__g_DllStructEx_sStructLineDeclaration, $STR_REGEXPARRAYMATCH)
-                If @error <> 0 Then Return SetError(__DllStructEx_Error("Regex for struct-line-declaration failed", 2), @error, "")
-                $sStruct &= __DllStructEx_ParseStructTypeCallback($aMatches, $tElements)
+        Local $mStructLineDeclaration = $aStructLineDeclarations[$i]
+        Switch $mStructLineDeclaration.type
+            Case 'union'
+                $sTranslatedStruct &= __DllStructEx_ParseUnion($mStructLineDeclaration, $tElements, $sTranslatedStruct)
+            Case 'struct'
+                $sTranslatedStruct &= __DllStructEx_ParseNestedStruct($mStructLineDeclaration, $tElements)
+            Case 'declaration'
+                $sTranslatedStruct &= __DllStructEx_ParseStructTypeCallback($mStructLineDeclaration, $tElements)
             Case Else
-                ConsoleWriteError("a struct-line-declaration could not be recognized!")
-        EndSelect
+                Return SetError(__DllStructEx_Error("Unsupported struct-line-declaration type: " & $aStructLineDeclarations[$i].type, 4), @error, "")
+        EndSwitch
+
+        If @error <> 0 Then Return SetError(@error, @extended, Null)
     Next
 
-    Local $aResult = [$sStruct, $tElements]
-    Return $aResult
+    Local $result = [$sTranslatedStruct, $tElements]
+    Return $result
 EndFunc
 
 #cs
