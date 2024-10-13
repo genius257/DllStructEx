@@ -598,6 +598,7 @@ Func __DllStructEx_ParseStruct($tInputStream)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to parse the provided string", 2), @error, "")
 
     Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement * UBound($aStructLineDeclarations, 1)))
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct to hold the parsed elements", 3), @error, "")
 
     $sStruct = ""
     Local $i
