@@ -72,11 +72,14 @@ Global Enum $__g_DllStructEx_eElementType_NONE, $__g_DllStructEx_eElementType_UN
 # @return DllStructEx
 #ce
 Func DllStructExCreate($sStruct, $pData = 0)
-    Local $aResult = __DllStructEx_ParseStruct($sStruct)
-    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create DllStruct from the final translated structure string", 1, @error), @error, "")
+    Local $tInputStream = InputStream($sStruct)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create InputStream from the provided string", 1), @error, "")
+
+    Local $aResult = __DllStructEx_ParseStruct($tInputStream)
+    If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to parse the provided string", 2), @error, "")
+
     Local $sTranslatedStruct = $aResult[0]
     Local $tElements = $aResult[1]
-    ;ConsoleWrite($sTranslatedStruct&@CRLF);NOTE: for debugging
 
     ;Indicating if struct ptr is self created and should be released on object desctruction
     $ownPStruct = (0 = $pData)
