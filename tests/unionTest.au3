@@ -3,6 +3,7 @@
 #include "../DllStructEx.debug.au3"
 
 $o = DllStructExCreate("union{INT a;INT b;INT c;} u;")
+assertEquals(0, @error)
 assertSame($o.u.a, $o.u.b)
 assertSame($o.u.b, $o.u.c)
 $o.u.a = 123
@@ -15,6 +16,7 @@ $tagA = "INT a;"
 $tagB = "INT b;"
 $tagC = "INT c;"
 $oUnionA = DllStructExCreate($tagUnionA)
+assertEquals(0, @error)
 
 ;DllStructExDisplay($oUnionA)
 $oA = $oUnionA.b.a
