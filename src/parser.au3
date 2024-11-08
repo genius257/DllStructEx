@@ -13,7 +13,7 @@ Func __DllStructEx_Parse_Root($tInputStream, $bErrorMessages = $__DllStructEx_bE
 
     #Region
         Local $aStructLineDeclarations[0]
-        
+
         While 1
             Local $iPos = InputStream_GetPos($tInputStream)
             $mStructLineDeclaration = __DllStructEx_Parse_struct_line_declaration($tInputStream, UBound($aStructLineDeclarations) = 0)

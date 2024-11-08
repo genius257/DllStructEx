@@ -219,12 +219,16 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     #ce
 
     If $dispIdMember = 0 Then
+        ; Object was called as a function with no property name
+
         If ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT)) Then Return $__g_DllStructEx_DISP_E_EXCEPTION
         Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
         If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
         If $tDISPPARAMS.cArgs = 1 Then
             Local $tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
             If $tVARIANT.vt = $__g_DllStructEx_VT_BSTR Then
+                ; Parameter is a string, we search for a match in elements
+
                 Local $name = StringLower(_WinAPI_GetString($tVARIANT.data))
                 Local $tObject = DllStructCreate($__g_DllStructEx_tagObject, $pSelf - 8)
                 Local $i
@@ -238,7 +242,12 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
                 Next
                 If $dispIdMember = 0 Then Return $__g_DllStructEx_DISP_E_MEMBERNOTFOUND
             ElseIf $tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $tVARIANT.vt = $__g_DllStructEx_VT_I8 Then
+                ; Parameter is a number, we assume it's the element index
+
                 $dispIdMember = DllStructGetData(DllStructCreate($tVARIANT.vt = $__g_DllStructEx_VT_I4 ? "INT" : "INT64", DllStructGetPtr($tVARIANT, 'data')), 1)
+
+                ;FIXME: validate if element index is valid
+
                 If $dispIdMember < 1 Then Return $__g_DllStructEx_DISP_E_MEMBERNOTFOUND
             Else
                 Return $__g_DllStructEx_DISP_E_BADVARTYPE
@@ -246,6 +255,8 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
 
             If $dispIdMember = -1 Then Return $__g_DllStructEx_DISP_E_MEMBERNOTFOUND
         Else
+            ; No arguments provided, return translated struct
+
             ;VariantInit($pVariant) ;TODO: it seems unclear if the return variant should go through VariantInit before usage?
             Local $tObject = DllStructCreate($__g_DllStructEx_tagObject, $pSelf-8)
             Local $tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $pVarResult)
@@ -257,7 +268,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     EndIf
 
     If $dispIdMember < -1 Then
-        ;
+        ;FIXME: nothing is done here?
     EndIf
 
     If $dispIdMember > 0 Then
@@ -664,6 +675,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
                 $tElement.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($_tElements, "Elements"))))
                 ;If $tElement.cElements > 0 Then ConsoleWrite("> "&_WinAPI_GetString(DllStructCreate($__g_DllStructEx_tagElement, DllStructGetPtr($_tElements, "Elements")).szName)&@CRLF)
                 ;$tElement.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sTranslatedType, DllStructCreate($sTranslatedType, DllStructGetPtr($_tElements, "Elements"))))
+                ;FIXME: if $tElements is null, then $tElement is temporary and strings currently will not be freed!
                 $tElement.szStruct = __DllStructEx_CreateString($sType)
                 $tElement.szTranslatedStruct = __DllStructEx_CreateString($sStruct)
                 If IsDllStruct($tElements) Then $tElements.Index += 1
@@ -678,6 +690,7 @@ Func __DllStructEx_ParseStructType($sType, $tElements = Null)
     EndSwitch
 
     If $iSize > 0 Then
+        ;FIXME: if $tElements is null, then $tElement is temporary and strings currently will not be freed!
         $tElement.szStruct = __DllStructEx_CreateString($sType)
         $tElement.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
         ;$tElement.pStruct = ? ;NOTE: not needed here, only here for clarity
@@ -823,6 +836,7 @@ Func __DllStructEx_ParseUnion($mUnion, $tUnions, $sStruct)
         If @error = 0 Then; if @error <> 0, we assume no matches are available.
             ;calculate the size of the type
             ; WARNING: This line currenly assumes that the last element in $aStructLineDeclarations is a declaration type. If this is not the case, this code will fail.
+            ;FIXME: if $aStructLineDeclarations[UBound($aStructLineDeclarations) - 1] contains a zero size type, like STRUCT, ENDSTRUCT OR ALIGN, maybe we should work out way backwards?
             __DllStructEx_ParseStructType($aStructLineDeclarations[UBound($aStructLineDeclarations) - 1].dataType, DllStructCreate(StringFormat($__g_DllStructEx_tagElements, $__g_DllStructEx_iElement)))
 
             ;The size in bytes of the last element in $sStruct
