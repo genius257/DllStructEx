@@ -322,7 +322,13 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                     Local $_tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
                     Local $vData = __DllStructEx_VariantToData($_tVARIANT)
                     If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
-                    DllStructSetData($tStruct, _WinAPI_GetString($tElement.szName, True), $vData)
+                    $iIndex = Default
+                    If $tDISPPARAMS.cArgs = 2 Then
+                        $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs + DllStructGetSize(DllStructCreate($__g_DllStructEx_tagVARIANT)))
+                        If Not ($_tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $_tVARIANT.vt = $__g_DllStructEx_VT_I8) Then Return $__g_DllStructEx_DISP_E_BADVARTYPE
+                        $iIndex = __DllStructEx_VariantToData($_tVARIANT)
+                    EndIf
+                    DllStructSetData($tStruct, _WinAPI_GetString($tElement.szName, True), $vData, $iIndex)
                 Else
                     Return $__g_DllStructEx_DISP_E_EXCEPTION
                 EndIf
@@ -743,6 +749,8 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to parse element type", 7), @error, "")
 
     If $iSize > 0 Then
+        If Not ($mDeclaration.arraySize = Null) Then $iSize *= $mDeclaration.arraySize
+
         Local $pName = __DllStructEx_CreateString($sName)
         If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to create string for element name", 8), @error, "")
         $tElement.szName = $pName
@@ -763,9 +771,11 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
         Return $sType
     EndIf
 
-    Local $aType = StringRegExp($sType, "(\w+)(\[\d+\])?", 1)
+    Local $aType = StringRegExp($sType, "(\w+)(?:\[(\d+)\])?", 1)
     If @error <> 0 Then Return SetError(__DllStructEx_Error(StringFormat('Parsing of struct in variable "%s" failed.', $sType), 2), @error, "")
-    Return StringFormat("%s %s%s;", $aType[0], $sName, UBound($aType, 1) > 1 ? $aType[1] : "")
+    Local $iArraySize = UBound($aType, 1) > 1 ? $aType[1] : 0
+    If (Not ($mDeclaration.arraySize = Null)) And $mDeclaration.arraySize > 0 Then $iArraySize = ($iArraySize > 0 ? $iArraySize * $mDeclaration.arraySize : $mDeclaration.arraySize)
+    Return StringFormat("%s %s%s;", $aType[0], $sName, $iArraySize > 0 ? StringFormat("[%d]", $iArraySize) : "")
 EndFunc
 
 #cs
