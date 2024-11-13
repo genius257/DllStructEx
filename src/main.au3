@@ -366,7 +366,16 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
                 If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 $tElements.Index = $tElement.cElements
-                Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
+                $iIndex = 1
+                If $tDISPPARAMS.cArgs = 1 Then
+                    $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
+                    If Not ($_tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $_tVARIANT.vt = $__g_DllStructEx_VT_I8) Then Return $__g_DllStructEx_DISP_E_BADVARTYPE
+                    $iIndex = __DllStructEx_VariantToData($_tVARIANT)
+                    If $iIndex < 1 Or $iIndex > $tElement.iArraySize Then Return $__g_DllStructEx_DISP_E_BADINDEX
+                EndIf
+                Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)) + (DllStructCreate(StringFormat($__g_DllStructEx_tagElements, 1), $tElement.pElements).Size * ($iIndex - 1)), $tElement.pElements)
                 Local $_tObject = DllStructCreate($__g_DllStructEx_tagObject, Ptr($vData)-8)
                 $_tObject.pParent = $pSelf
                 $_tObject.bUnion = 1
@@ -895,6 +904,11 @@ Func __DllStructEx_ParseUnion($mUnion, $tUnions, $sStruct)
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to allocate and move memory for elements", 6), @error, "")
 
     Local $iBytes = $tElements.Size
+    DllStructSetData(DllStructCreate(StringFormat($__g_DllStructEx_tagElements, 1), $tUnion.pElements), "Size", $iBytes)
+    If Not ($mUnion.arraySize = Null) Then
+        $tUnion.iArraySize = $mUnion.arraySize
+        $iBytes *= $mUnion.arraySize
+    EndIf
     If $iBytes <= 0 Then Return SetError(__DllStructEx_Error("Invalid struct size: " & $iBytes & " bytes, in struct: """ & $sTranslatedStruct & """", 5))
     $tUnions.Size = $tUnions.Size < $iBytes ? $iBytes : $tUnions.Size
     If $iPaddingBytes > 0 Then Return StringFormat("BYTE[%d];BYTE %s[%d];", $iPaddingBytes, $sName, $iBytes);add padding bytes
