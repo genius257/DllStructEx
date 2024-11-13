@@ -55,7 +55,7 @@ Global Enum $__g_DllStructEx_VT_EMPTY,$__g_DllStructEx_VT_NULL,$__g_DllStructEx_
     $__g_DllStructEx_VT_TYPEMASK=0xfff
 
 Global Const $__g_DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;boolean ownPStruct;int cElements;ptr pElements;ptr pParent;BYTE bUnion;"
-Global Const $__g_DllStructEx_tagElement = "int iType;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
+Global Const $__g_DllStructEx_tagElement = "int iType;int iArraySize;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
 #cs
 # The size of $__g_DllStructEx_tagElement in bytes 
 # @var int
@@ -345,7 +345,16 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
                 If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 $tElements.Index = $tElement.cElements
-                Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)), $tElement.pElements)
+                Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
+                $iIndex = 1
+                If $tDISPPARAMS.cArgs = 1 Then
+                    $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
+                    If Not ($_tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $_tVARIANT.vt = $__g_DllStructEx_VT_I8) Then Return $__g_DllStructEx_DISP_E_BADVARTYPE
+                    $iIndex = __DllStructEx_VariantToData($_tVARIANT)
+                    If $iIndex < 1 Or $iIndex > $tElement.iArraySize Then Return $__g_DllStructEx_DISP_E_BADINDEX
+                EndIf
+                Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)) + (DllStructGetSize(DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct))) * ($iIndex - 1)), $tElement.pElements)
                 Local $_tObject = DllStructCreate($__g_DllStructEx_tagObject, Ptr($vData)-8)
                 $_tObject.pParent = $pSelf
                 __DllStructEx_AddRef($pSelf)
@@ -946,6 +955,14 @@ Func __DllStructEx_ParseNestedStruct($mStruct, $tStructs)
     Local $sElements = StringFormat("BYTE[%d]", $__g_DllStructEx_iElement * $tStruct.cElements)
     $tStruct.pElements = DllStructGetPtr(__DllStructEx_DllStructAlloc($sElements, DllStructCreate($sElements, DllStructGetPtr($tElements, "Elements"))));TODO: add explanation comment for this line.
     If @error <> 0 Then Return SetError(__DllStructEx_Error("Failed to allocate and move memory for elements", 6), @error, "")
+
+    If Not ($mStruct.arraySize = Null) Then
+        $tStruct.iArraySize = $mStruct.arraySize
+        Local $_sTranslatedStruct = $sTranslatedStruct
+        For $i = 1 To $mStruct.arraySize - 1 Step +1
+            $sTranslatedStruct &= $_sTranslatedStruct
+        Next
+    EndIf
 
     Local $sStruct = __DllStructEx_AnonymizeAndTagStruct($sTranslatedStruct, $sName)
 
