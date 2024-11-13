@@ -313,7 +313,15 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
         Switch $tElement.iType
             Case $__g_DllStructEx_eElementType_Element
                 If ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYGET)=$__g_DllStructEx_DISPATCH_PROPERTYGET)) Then
-                    Local $vData = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName, True));TODO: add support for getting struct data slice by index
+                    Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                    If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
+                    $iIndex = Default
+                    If $tDISPPARAMS.cArgs = 1 Then
+                        $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
+                        If Not ($_tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $_tVARIANT.vt = $__g_DllStructEx_VT_I8) Then Return $__g_DllStructEx_DISP_E_BADVARTYPE
+                        $iIndex = __DllStructEx_VariantToData($_tVARIANT)
+                    EndIf
+                    Local $vData = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName, True), $iIndex);TODO: add support for getting struct data slice by index
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 ElseIf ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT)) Then
