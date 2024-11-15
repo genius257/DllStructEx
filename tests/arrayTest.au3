@@ -98,5 +98,22 @@ assertEquals(5, $tx.a(5).a)
     assertEquals(3, $tx.a(3))
     assertEquals(4, $tx.a(4))
     assertEquals(5, $tx.a(5))
+
+    $tx.a(1) = 11
+    assertEquals(0, @error)
+    $tx.a(2) = 22
+    assertEquals(0, @error)
+    $tx.a(3) = 33
+    assertEquals(0, @error)
+    $tx.a(4) = 44
+    assertEquals(0, @error)
+    $tx.a(5) = 55
+    assertEquals(0, @error)
+
+    assertEquals(11, $tx.a(1))
+    assertEquals(22, $tx.a(2))
+    assertEquals(33, $tx.a(3))
+    assertEquals(44, $tx.a(4))
+    assertEquals(55, $tx.a(5))
 #endregion
 
