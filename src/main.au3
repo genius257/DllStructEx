@@ -389,13 +389,23 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $sType = _WinAPI_GetString($tElement.szStruct)
 
                 Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
-                If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
+                ; If it's a property put we allow up to 2 parameters, otherwise we expect 1
+                If ($tDISPPARAMS.cArgs > 1 And Not ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT) Or (BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUTREF)=$__g_DllStructEx_DISPATCH_PROPERTYPUTREF))) Or $tDISPPARAMS.cArgs > 2 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
+
                 $iIndex = Default
-                If $tDISPPARAMS.cArgs = 1 Then
-                    $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
+                If ($tDISPPARAMS.cArgs = 1 And Not ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT) Or (BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUTREF)=$__g_DllStructEx_DISPATCH_PROPERTYPUTREF))) Or $tDISPPARAMS.cArgs = 2 Then
+                    $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs + ($tDISPPARAMS.cArgs > 1 ? DllStructGetSize(DllStructCreate($__g_DllStructEx_tagVARIANT)) : 0))
                     If Not ($_tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $_tVARIANT.vt = $__g_DllStructEx_VT_I8) Then Return $__g_DllStructEx_DISP_E_BADVARTYPE
                     $iIndex = __DllStructEx_VariantToData($_tVARIANT)
                     If $iIndex < 1 Or $iIndex > $tElement.iArraySize Then Return $__g_DllStructEx_DISP_E_BADINDEX
+
+                    ; Here we remake parameters, to remove the index parameter and pass down the rest of the parameters
+                    $_tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS)
+                    If $tDISPPARAMS.cArgs = 2 Then
+                        $_tDISPPARAMS.cArgs = 1
+                        $_tDISPPARAMS.rgvargs = $tDISPPARAMS.rgvargs
+                    EndIf
+                    $pDispParams = DllStructGetPtr($_tDISPPARAMS)
                 EndIf
 
                 Local $pLevel = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName), $iIndex)
@@ -472,8 +482,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                         $_tObject.pStruct = $pLevel
                         $_tObject.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
 
-                        Local $_tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS)
-                        $iResponse = __DllStructEx_Invoke_ProcessElement(DllStructGetPtr($_tObject, "Object"), 1, $riid, $lcid, $wFlags, DllStructGetPtr($_tDISPPARAMS), $pVarResult, $pExcepInfo, $puArgErr)
+                        $iResponse = __DllStructEx_Invoke_ProcessElement(DllStructGetPtr($_tObject, "Object"), 1, $riid, $lcid, $wFlags, $pDispParams, $pVarResult, $pExcepInfo, $puArgErr)
                         ;Cleanup manually managed memory, before returning
                         _WinAPI_FreeMemory($_tObject.szTranslatedStruct)
                         Return $iResponse
