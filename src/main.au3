@@ -355,6 +355,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                     $iIndex = __DllStructEx_VariantToData($_tVARIANT)
                     If $iIndex < 1 Or $iIndex > $tElement.iArraySize Then Return $__g_DllStructEx_DISP_E_BADINDEX
                 EndIf
+                ;WARNING: Moving pointer offet by size times index, may result in wrong adress due to alignment/padding
                 Local $vData = __DllStructEx_Create($tElement.szStruct, $tElement.szTranslatedStruct, $tElements, DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)) + (DllStructGetSize(DllStructCreate(_WinAPI_GetString($tElement.szTranslatedStruct))) * ($iIndex - 1)), $tElement.pElements)
                 Local $_tObject = DllStructCreate($__g_DllStructEx_tagObject, Ptr($vData)-8)
                 $_tObject.pParent = $pSelf
