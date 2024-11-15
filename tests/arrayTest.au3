@@ -74,3 +74,29 @@ assertEquals(5, DllStructGetData(DllStructExGetStruct($tx.a(5)), 1))
 assertEquals(5, $tx.a(5).a)
 #endregion
 
+#region pointer
+    $tx = DllStructExCreate("INT *a[5];")
+    assertEquals(0, @error)
+    assertEquals("PTR a[5];", DllStructExGetTranspiledStructString($tx))
+
+    #region setup test data
+        $t = DllStructCreate("INT v[5];")
+        DllStructSetData($t, 1, 1, 1)
+        DllStructSetData($t, 1, 2, 2)
+        DllStructSetData($t, 1, 3, 3)
+        DllStructSetData($t, 1, 4, 4)
+        DllStructSetData($t, 1, 5, 5)
+        DllStructSetData(DllStructExGetStruct($tx), 1, DllStructGetPtr($t), 1)
+        DllStructSetData(DllStructExGetStruct($tx), 1, DllStructGetPtr($t)+(@AutoItX64 ? 8 : 4), 2)
+        DllStructSetData(DllStructExGetStruct($tx), 1, DllStructGetPtr($t)+(@AutoItX64 ? 16 : 8), 3)
+        DllStructSetData(DllStructExGetStruct($tx), 1, DllStructGetPtr($t)+(@AutoItX64 ? 24 : 12), 4)
+        DllStructSetData(DllStructExGetStruct($tx), 1, DllStructGetPtr($t)+(@AutoItX64 ? 32 : 16), 5)
+    #endregion
+
+    assertEquals(1, $tx.a(1))
+    assertEquals(2, $tx.a(2))
+    assertEquals(3, $tx.a(3))
+    assertEquals(4, $tx.a(4))
+    assertEquals(5, $tx.a(5))
+#endregion
+

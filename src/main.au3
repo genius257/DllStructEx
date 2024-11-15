@@ -386,8 +386,19 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
             Case $__g_DllStructEx_eElementType_PTR
                 Local $iPtrLevelCount = $tElement.cElements
                 Local $sType = _WinAPI_GetString($tElement.szStruct)
-                Local $pLevel = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName))
-                Local $ppLevel = DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName))
+
+                Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
+                $iIndex = Default
+                If $tDISPPARAMS.cArgs = 1 Then
+                    $_tVARIANT = DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
+                    If Not ($_tVARIANT.vt = $__g_DllStructEx_VT_I4 Or $_tVARIANT.vt = $__g_DllStructEx_VT_I8) Then Return $__g_DllStructEx_DISP_E_BADVARTYPE
+                    $iIndex = __DllStructEx_VariantToData($_tVARIANT)
+                    If $iIndex < 1 Or $iIndex > $tElement.iArraySize Then Return $__g_DllStructEx_DISP_E_BADINDEX
+                EndIf
+
+                Local $pLevel = DllStructGetData($tStruct, _WinAPI_GetString($tElement.szName), $iIndex)
+                Local $ppLevel = DllStructGetPtr($tStruct, _WinAPI_GetString($tElement.szName)); FIXME: should ptr offset be considered here?
                 Local $iLevel = 1
                 For $iLevel = 1 To $iPtrLevelCount - 1 Step +1 ;This loop handles all but final ptr.
                     If 0 = $pLevel Then
@@ -459,7 +470,9 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                         $_tObject.pElements = DllStructGetPtr($tElements, "Elements")
                         $_tObject.pStruct = $pLevel
                         $_tObject.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
-                        $iResponse = __DllStructEx_Invoke_ProcessElement(DllStructGetPtr($_tObject, "Object"), 1, $riid, $lcid, $wFlags, $pDispParams, $pVarResult, $pExcepInfo, $puArgErr)
+
+                        Local $_tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;")
+                        $iResponse = __DllStructEx_Invoke_ProcessElement(DllStructGetPtr($_tObject, "Object"), 1, $riid, $lcid, $wFlags, DllStructGetPtr($_tDISPPARAMS), $pVarResult, $pExcepInfo, $puArgErr)
                         ;Cleanup manually managed memory, before returning
                         _WinAPI_FreeMemory($_tObject.szTranslatedStruct)
                         Return $iResponse
@@ -765,9 +778,13 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
         $tElement.cElements = $iIndirectionLevel
         $tElement.pElements = 0
         Local $iSize = @AutoItX64 ? 8 : 4 ; Size of pointer in bytes
+        If $mDeclaration.arraySize > 0 Then
+            $iSize *= $mDeclaration.arraySize
+            $tElement.iArraySize = $mDeclaration.arraySize
+        EndIf
         $tElements.Size = $tElements.Size < $iSize ? $iSize : $tElements.Size
         $tElements.Index += 1
-        Return StringFormat("PTR %s;", $sName)
+        Return StringFormat("PTR %s%s;", $sName, $mDeclaration.arraySize > 0 ? "[" & $mDeclaration.arraySize & "]" : "")
     EndIf
 
     $sType = __DllStructEx_ParseStructType($sType, $tElements)
