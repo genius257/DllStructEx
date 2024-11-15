@@ -56,6 +56,7 @@ Global Enum $__g_DllStructEx_VT_EMPTY,$__g_DllStructEx_VT_NULL,$__g_DllStructEx_
 
 Global Const $__g_DllStructEx_tagObject = "int RefCount;int Size;ptr Object;ptr Methods[7];ptr szStruct;ptr szTranslatedStruct;ptr pStruct;boolean ownPStruct;int cElements;ptr pElements;ptr pParent;BYTE bUnion;"
 Global Const $__g_DllStructEx_tagElement = "int iType;int iArraySize;ptr szName;ptr szStruct;ptr szTranslatedStruct;int cElements;ptr pElements;"
+Global Const $__g_DllStructEx_tagDISPPARAMS = "ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;"
 #cs
 # The size of $__g_DllStructEx_tagElement in bytes 
 # @var int
@@ -211,7 +212,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
     #cs
     ;For debugging: getting vt of autoit types
     ;TODO: remove this
-    $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+    $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
     If $tDISPPARAMS.cArgs<>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
     Local $tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
     ConsoleWrite($tVARIANT.vt&@CRLF)
@@ -222,7 +223,7 @@ Func __DllStructEx_Invoke($pSelf, $dispIdMember, $riid, $lcid, $wFlags, $pDispPa
         ; Object was called as a function with no property name
 
         If ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT)) Then Return $__g_DllStructEx_DISP_E_EXCEPTION
-        Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+        Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
         If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
         If $tDISPPARAMS.cArgs = 1 Then
             Local $tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
@@ -313,7 +314,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
         Switch $tElement.iType
             Case $__g_DllStructEx_eElementType_Element
                 If ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYGET)=$__g_DllStructEx_DISPATCH_PROPERTYGET)) Then
-                    Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                    Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                     If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                     $iIndex = Default
                     If $tDISPPARAMS.cArgs = 1 Then
@@ -325,7 +326,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                     __DllStructEx_DataToVariant($vData, $tVARIANT)
                     If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 ElseIf ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT)) Then
-                    Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                    Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                     If $tDISPPARAMS.cArgs<1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                     Local $_tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
                     Local $vData = __DllStructEx_VariantToData($_tVARIANT)
@@ -345,7 +346,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
                 If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 $tElements.Index = $tElement.cElements
-                Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                 If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                 $iIndex = 1
                 If $tDISPPARAMS.cArgs = 1 Then
@@ -366,7 +367,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $tElements = DllStructCreate(StringFormat($__g_DllStructEx_tagElements, 1)); WARNING: Elements property in this struct is "BYTE[1]", not intended for use!
                 If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 $tElements.Index = $tElement.cElements
-                Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                 If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                 $iIndex = 1
                 If $tDISPPARAMS.cArgs = 1 Then
@@ -387,7 +388,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                 Local $iPtrLevelCount = $tElement.cElements
                 Local $sType = _WinAPI_GetString($tElement.szStruct)
 
-                Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                 If $tDISPPARAMS.cArgs>1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                 $iIndex = Default
                 If $tDISPPARAMS.cArgs = 1 Then
@@ -423,7 +424,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                                 DllCallAddress("dword", $pRelease, "PTR", $pLevel); release the iunknown object
                             EndIf
 
-                            Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                            Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                             If $tDISPPARAMS.cArgs<1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                             Local $_tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
                             $pLevel = $_tVARIANT.data
@@ -443,7 +444,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                                 DllCallAddress("dword", $pRelease, "PTR", $pLevel); release the idispatch object
                             EndIf
 
-                            Local $tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;", $pDispParams)
+                            Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
                             If $tDISPPARAMS.cArgs<1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                             Local $_tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
                             $pLevel = $_tVARIANT.data
@@ -471,7 +472,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                         $_tObject.pStruct = $pLevel
                         $_tObject.szTranslatedStruct = __DllStructEx_CreateString($sTranslatedType)
 
-                        Local $_tDISPPARAMS = DllStructCreate("ptr rgvargs;ptr rgdispidNamedArgs;dword cArgs;dword cNamedArgs;")
+                        Local $_tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS)
                         $iResponse = __DllStructEx_Invoke_ProcessElement(DllStructGetPtr($_tObject, "Object"), 1, $riid, $lcid, $wFlags, DllStructGetPtr($_tDISPPARAMS), $pVarResult, $pExcepInfo, $puArgErr)
                         ;Cleanup manually managed memory, before returning
                         _WinAPI_FreeMemory($_tObject.szTranslatedStruct)
