@@ -100,7 +100,7 @@ Func __DllStructEx_Parse_struct_line_declaration($tInputStream, $bErrorMessages 
 EndFunc
 
 #cs
-# (?<union>union(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)
+# (?<union>union(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(\h*\[\h*\d+\h*\])?(?&hn)*)
 #ce
 Func __DllStructEx_Parse_union($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
     If Not (InputStream_PeekMany($tInputStream, 5) = "union") Then
@@ -191,6 +191,65 @@ Func __DllStructEx_Parse_union($tInputStream, $bErrorMessages = $__DllStructEx_b
         EndIf
     #EndRegion
 
+    ; Optional array case
+    #Region
+        Local $arraySize = Null
+        ; Save current position, will be used to restore the position if the array is not found
+        Local $iPos = InputStream_GetPos($tInputStream)
+
+        ; Expect zero or more horizontal spaces
+        While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+            InputStream_StepForward($tInputStream)
+        WEnd
+
+        If InputStream_Peek($tInputStream) = "[" Then
+            InputStream_StepForward($tInputStream)
+
+            ; Expect zero or more horizontal spaces
+            While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+                InputStream_StepForward($tInputStream)
+            WEnd
+
+            ; Expect one or more digits
+            If StringIsDigit(InputStream_Peek($tInputStream)) Then
+                $arraySize = InputStream_Consume($tInputStream)
+
+                While StringIsDigit(InputStream_Peek($tInputStream))
+                    $arraySize &= InputStream_Consume($tInputStream)
+                WEnd
+
+                $arraySize = Int($arraySize)
+                If @error <> 0 Then
+                    If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to convert array size to integer at offset: %s', InputStream_GetPos($tInputStream)))
+                    Return SetError(1, 0, Null)
+                EndIf
+                If $arraySize <= 0 Then
+                    If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Array size must be greater than zero at offset: %s', InputStream_GetPos($tInputStream)))
+                    Return SetError(1, 0, Null)
+                EndIf
+
+                ; Expect zero or more horizontal spaces
+                While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+                    InputStream_StepForward($tInputStream)
+                WEnd
+
+                If InputStream_Peek($tInputStream) = "]" Then
+                    InputStream_StepForward($tInputStream)
+                Else
+                    ; Restore position
+                    InputStream_StepTo($tInputStream, $iPos)
+                    ;TODO: We could add an error here
+                EndIf
+            Else
+                ; Restore position
+                InputStream_StepTo($tInputStream, $iPos)
+            EndIf
+        Else
+            ; Restore position
+            InputStream_StepTo($tInputStream, $iPos)
+        EndIf
+    #EndRegion
+
     ; expect zero or more horizontal-spaces/newlines
     Do
         __DllStructEx_Parse_hn($tInputStream, False)
@@ -201,12 +260,13 @@ Func __DllStructEx_Parse_union($tInputStream, $bErrorMessages = $__DllStructEx_b
     $result['content'] = $content
     $result['identifier'] = $identifier
     $result['structLineDeclarations'] = $aStructLineDeclarations
+    $result['arraySize'] = $arraySize
 
     Return $result
 EndFunc
 
 #cs
-# (?<struct>struct(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(?&hn)*)
+# (?<struct>struct(?&hn)*{(?&hn)*(?:(?&struct_line_declaration)(?&hn)*)+}(?:\h+(?&identifier))?(\h*\[\h*\d+\h*\])?(?&hn)*)
 #ce
 Func __DllStructEx_Parse_struct($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
     If Not (InputStream_PeekMany($tInputStream, 6) = "struct") Then
@@ -296,6 +356,65 @@ Func __DllStructEx_Parse_struct($tInputStream, $bErrorMessages = $__DllStructEx_
         EndIf
     #EndRegion
 
+    ; Optional array case
+    #Region
+        Local $arraySize = Null
+        ; Save current position, will be used to restore the position if the array is not found
+        Local $iPos = InputStream_GetPos($tInputStream)
+
+        ; Expect zero or more horizontal spaces
+        While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+            InputStream_StepForward($tInputStream)
+        WEnd
+
+        If InputStream_Peek($tInputStream) = "[" Then
+            InputStream_StepForward($tInputStream)
+
+            ; Expect zero or more horizontal spaces
+            While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+                InputStream_StepForward($tInputStream)
+            WEnd
+
+            ; Expect one or more digits
+            If StringIsDigit(InputStream_Peek($tInputStream)) Then
+                $arraySize = InputStream_Consume($tInputStream)
+
+                While StringIsDigit(InputStream_Peek($tInputStream))
+                    $arraySize &= InputStream_Consume($tInputStream)
+                WEnd
+
+                $arraySize = Int($arraySize)
+                If @error <> 0 Then
+                    If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to convert array size to integer at offset: %s', InputStream_GetPos($tInputStream)))
+                    Return SetError(1, 0, Null)
+                EndIf
+                If $arraySize <= 0 Then
+                    If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Array size must be greater than zero at offset: %s', InputStream_GetPos($tInputStream)))
+                    Return SetError(1, 0, Null)
+                EndIf
+
+                ; Expect zero or more horizontal spaces
+                While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+                    InputStream_StepForward($tInputStream)
+                WEnd
+
+                If InputStream_Peek($tInputStream) = "]" Then
+                    InputStream_StepForward($tInputStream)
+                Else
+                    ; Restore position
+                    InputStream_StepTo($tInputStream, $iPos)
+                    ;TODO: We could add an error here
+                EndIf
+            Else
+                ; Restore position
+                InputStream_StepTo($tInputStream, $iPos)
+            EndIf
+        Else
+            ; Restore position
+            InputStream_StepTo($tInputStream, $iPos)
+        EndIf
+    #EndRegion
+
     ; expect zero or more horizontal-spaces/newlines
     Do
         __DllStructEx_Parse_hn($tInputStream, False)
@@ -306,12 +425,13 @@ Func __DllStructEx_Parse_struct($tInputStream, $bErrorMessages = $__DllStructEx_
     $result['content'] = $content
     $result['identifier'] = $identifier
     $result['structLineDeclarations'] = $aStructLineDeclarations
+    $result['arraySize'] = $arraySize
 
     Return $result
 EndFunc
 
 #cs
-# (?<declaration>(?&hn)*(?&type)\h+(?&identifier)(?&hn)*)
+# (?<declaration>(?&hn)*(?&type)\h+(?&identifier)(\h*\[\h*\d+\h*\])?(?&hn)*)
 #ce
 Func __DllStructEx_Parse_declaration($tInputStream, $bErrorMessages = $__DllStructEx_bErrorMessages)
     ; expect zero or more horizontal-spaces/newlines
@@ -344,6 +464,65 @@ Func __DllStructEx_Parse_declaration($tInputStream, $bErrorMessages = $__DllStru
         Return SetError(1, 0, Null)
     EndIf
 
+    ; Optional array case
+    #Region
+        Local $arraySize = Null
+        ; Save current position, will be used to restore the position if the array is not found
+        Local $iPos = InputStream_GetPos($tInputStream)
+
+        ; Expect zero or more horizontal spaces
+        While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+            InputStream_StepForward($tInputStream)
+        WEnd
+
+        If InputStream_Peek($tInputStream) = "[" Then
+            InputStream_StepForward($tInputStream)
+
+            ; Expect zero or more horizontal spaces
+            While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+                InputStream_StepForward($tInputStream)
+            WEnd
+
+            ; Expect one or more digits
+            If StringIsDigit(InputStream_Peek($tInputStream)) Then
+                $arraySize = InputStream_Consume($tInputStream)
+
+                While StringIsDigit(InputStream_Peek($tInputStream))
+                    $arraySize &= InputStream_Consume($tInputStream)
+                WEnd
+
+                $arraySize = Int($arraySize)
+                If @error <> 0 Then
+                    If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Failed to convert array size to integer at offset: %s', InputStream_GetPos($tInputStream)))
+                    Return SetError(1, 0, Null)
+                EndIf
+                If $arraySize <= 0 Then
+                    If $bErrorMessages Then __DllStructEx_ConsoleWriteErrorLine(StringFormat('ERROR: Array size must be greater than zero at offset: %s', InputStream_GetPos($tInputStream)))
+                    Return SetError(1, 0, Null)
+                EndIf
+
+                ; Expect zero or more horizontal spaces
+                While __DllStructEx_Parse_isHorizontalWhitespace(InputStream_Peek($tInputStream))
+                    InputStream_StepForward($tInputStream)
+                WEnd
+
+                If InputStream_Peek($tInputStream) = "]" Then
+                    InputStream_StepForward($tInputStream)
+                Else
+                    ; Restore position
+                    InputStream_StepTo($tInputStream, $iPos)
+                    ;TODO: We could add an error here
+                EndIf
+            Else
+                ; Restore position
+                InputStream_StepTo($tInputStream, $iPos)
+            EndIf
+        Else
+            ; Restore position
+            InputStream_StepTo($tInputStream, $iPos)
+        EndIf
+    #EndRegion
+
     ; expect zero or more horizontal-spaces/newlines
     Do
         __DllStructEx_Parse_hn($tInputStream, False)
@@ -353,6 +532,7 @@ Func __DllStructEx_Parse_declaration($tInputStream, $bErrorMessages = $__DllStru
     $result['type'] = 'declaration'
     $result['dataType'] = $sDataType
     $result['identifier'] = $identifier
+    $result['arraySize'] = $arraySize
     Return $result
 EndFunc
 

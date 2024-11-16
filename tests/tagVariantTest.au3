@@ -1,4 +1,6 @@
+#include "../au3pm/au3unit/Unit/assert.au3"
 #include "../DllStructEx.au3"
+#include "../DllStructEx.debug.au3"
 
 $tagVARIANT = _
 "  union {"& _
@@ -61,7 +63,7 @@ $tagVARIANT = _
 "    } __VARIANT_NAME_2;"& _
 "    DECIMAL decVal;"& _
 "  } __VARIANT_NAME_1;"
-#cs
+
 $tagDECIMAL = _
   "USHORT wReserved;"& _
   "union {"& _
@@ -79,17 +81,8 @@ $tagDECIMAL = _
   "  } DUMMYSTRUCTNAME2;"& _
   "  ULONGLONG Lo64;"& _
   "} DUMMYUNIONNAME2;"
-#ce
-
-$tagDECIMAL = _
-  "WORD wReserved;"& _
-  "BYTE scale;"& _
-  "BYTE sign;"& _
-  "ULONG Hi32;"& _
-  "ULONGLONG Lo64;"
 
 $typeULONGLONG = "UINT64"
-
 $typeVARTYPE = "USHORT"
 $typeLONGLONG = "INT64"
 $typeVARIANT_BOOL = "SHORT"
@@ -100,6 +93,7 @@ $typePVOID = "HANDLE"
 $tagCY = "ULONG Lo;LONG Hi;"
 
 $txVariant = DllStructExCreate($tagVARIANT)
-If @error <> 0 Then Exit MsgBox(0, "Unexpected error", @error)
-ConsoleWrite("Final result:"&@CRLF)
-ConsoleWrite(@TAB&DllStructExGetTranspiledStructString($txVariant)&@CRLF)
+assertEquals(0, @error)
+
+assertEquals("BYTE __VARIANT_NAME_1[16];", DllStructExGetTranspiledStructString($txVariant))
+DllStructExDisplay($txVariant)
