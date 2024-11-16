@@ -327,6 +327,7 @@ Func __DllStructEx_Invoke_ProcessElement($pSelf, $dispIdMember, $riid, $lcid, $w
                     If @error <> 0 Then Return $__g_DllStructEx_DISP_E_EXCEPTION
                 ElseIf ((BitAND($wFlags, $__g_DllStructEx_DISPATCH_PROPERTYPUT)=$__g_DllStructEx_DISPATCH_PROPERTYPUT)) Then
                     Local $tDISPPARAMS = DllStructCreate($__g_DllStructEx_tagDISPPARAMS, $pDispParams)
+                    ; FIXME: check if greater than 2 and also trigger badparam count return
                     If $tDISPPARAMS.cArgs<1 Then Return $__g_DllStructEx_DISP_E_BADPARAMCOUNT
                     Local $_tVARIANT=DllStructCreate($__g_DllStructEx_tagVARIANT, $tDISPPARAMS.rgvargs)
                     Local $vData = __DllStructEx_VariantToData($_tVARIANT)
