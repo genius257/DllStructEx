@@ -96,4 +96,3 @@ $txVariant = DllStructExCreate($tagVARIANT)
 assertEquals(0, @error)
 
 assertEquals("BYTE __VARIANT_NAME_1[16];", DllStructExGetTranspiledStructString($txVariant))
-DllStructExDisplay($txVariant)
