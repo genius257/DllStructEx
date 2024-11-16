@@ -1,1 +1,1 @@
-{"name":"DllStructEx","description":"Extended DllStruct for AutoIt3","author":"genius257","main":"DllStructEx.au3","dependencies":{"au3unit":"1.0.0"},"scripts":{},"licence":"MIT"}
+{"name":"DllStructEx","description":"Extended DllStruct for AutoIt3","author":"genius257","main":"DllStructEx.au3","dependencies":{"au3unit":"1.0.0"},"scripts":{"test": "cd tests && \"../au3pm/au3unit/build/au3unit.exe\""},"licence":"MIT"}
