@@ -117,3 +117,62 @@ assertEquals(5, $tx.a(5).a)
     assertEquals(55, $tx.a(5))
 #endregion
 
+#region custom tag type
+$tagTagX = "INT a[5];"
+$tx = DllStructExCreate("tagX a[5];")
+assertEquals(0, @error)
+assertEquals("STRUCT;INT a[5];INT a[5];INT a[5];INT a[5];INT a[5];ENDSTRUCT;", DllStructExGetTranspiledStructString($tx))
+
+$tx.a(1).a(1) = 11
+$tx.a(1).a(2) = 12
+$tx.a(1).a(3) = 13
+$tx.a(1).a(4) = 14
+$tx.a(1).a(5) = 15
+$tx.a(2).a(1) = 21
+$tx.a(2).a(2) = 22
+$tx.a(2).a(3) = 23
+$tx.a(2).a(4) = 24
+$tx.a(2).a(5) = 25
+$tx.a(3).a(1) = 31
+$tx.a(3).a(2) = 32
+$tx.a(3).a(3) = 33
+$tx.a(3).a(4) = 34
+$tx.a(3).a(5) = 35
+$tx.a(4).a(1) = 41
+$tx.a(4).a(2) = 42
+$tx.a(4).a(3) = 43
+$tx.a(4).a(4) = 44
+$tx.a(4).a(5) = 45
+$tx.a(5).a(1) = 51
+$tx.a(5).a(2) = 52
+$tx.a(5).a(3) = 53
+$tx.a(5).a(4) = 54
+$tx.a(5).a(5) = 55
+
+
+assertEquals(11, $tx.a(1).a(1))
+assertEquals(12, $tx.a(1).a(2))
+assertEquals(13, $tx.a(1).a(3))
+assertEquals(14, $tx.a(1).a(4))
+assertEquals(15, $tx.a(1).a(5))
+assertEquals(21, $tx.a(2).a(1))
+assertEquals(22, $tx.a(2).a(2))
+assertEquals(23, $tx.a(2).a(3))
+assertEquals(24, $tx.a(2).a(4))
+assertEquals(25, $tx.a(2).a(5))
+assertEquals(31, $tx.a(3).a(1))
+assertEquals(32, $tx.a(3).a(2))
+assertEquals(33, $tx.a(3).a(3))
+assertEquals(34, $tx.a(3).a(4))
+assertEquals(35, $tx.a(3).a(5))
+assertEquals(41, $tx.a(4).a(1))
+assertEquals(42, $tx.a(4).a(2))
+assertEquals(43, $tx.a(4).a(3))
+assertEquals(44, $tx.a(4).a(4))
+assertEquals(45, $tx.a(4).a(5))
+assertEquals(51, $tx.a(5).a(1))
+assertEquals(52, $tx.a(5).a(2))
+assertEquals(53, $tx.a(5).a(3))
+assertEquals(54, $tx.a(5).a(4))
+assertEquals(55, $tx.a(5).a(5))
+#endregion

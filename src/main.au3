@@ -820,6 +820,13 @@ Func __DllStructEx_ParseStructTypeCallback($mDeclaration, $tElements)
 
     If $tElement.iType = $__g_DllStructEx_eElementType_STRUCT Then
         $sType = __DllStructEx_AnonymizeAndTagStruct($sType, $sName)
+        If $mDeclaration.arraySize > 0 Then
+            $tElement.iArraySize = $mDeclaration.arraySize
+            Local $_sTranslatedStruct = $sType
+            For $i = 1 To $mDeclaration.arraySize - 1 Step +1
+                $sType &= $_sTranslatedStruct
+            Next
+        EndIf
         ;wrap in au3 struct indicator
         $sType = "STRUCT;"&$sType&"ENDSTRUCT;"
         Return $sType
